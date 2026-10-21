@@ -1,0 +1,48 @@
+# Infra config (secrets, local postgres volume). Keep *.example tracked.
+config/*
+!config/*.example
+
+node_modules/
+**/node_modules/
+
+# Env / secrets — never commit real values
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+
+# Vercel local link
+.vercel
+**/.vercel
+
+# Credentials / keys
+*.pem
+*.p12
+*.pfx
+*credentials*.json
+*service-account*.json
+
+# Python / migration runtime
+**/__pycache__/
+*.pyc
+_db_migrations/.env
+_db_migrations/.env.*
+_db_migrations/failed_records.json
+
+# OS / IDE
+.DS_Store
+.idea
+.fleet
+*.log
+
+# Local Vercel migration backup (contains environment values)
+.vercel-migration/
+
+# Local deploy bundles (do not commit)
+ClickLab-frontend-dist.zip
+**/ClickLab-frontend-dist.zip
+
+# Local Netlify folder
+.netlify

@@ -1,0 +1,905 @@
+@import url('https://fonts.bunny.net/css?family=sora:600,700|outfit:500,600,700|dm-sans:400,500,600,700');
+
+.clicklab-root {
+  --cl-bg-deep: #030506;
+  --cl-bg: #070a0c;
+  --cl-bg-elevated: #0d1218;
+  --cl-neon: #39ff88;
+  --cl-neon-dim: #22c55e;
+  --cl-violet: #8b5cf6;
+  --cl-violet-bright: #a855f7;
+  --cl-cyan: #22d3ee;
+  --cl-text: #e8edf2;
+  --cl-text-muted: #8b9aab;
+  --cl-glass: rgba(13, 18, 24, 0.72);
+  --cl-border: rgba(57, 255, 136, 0.18);
+  --cl-border-violet: rgba(139, 92, 246, 0.25);
+  --cl-radius-lg: 1rem;
+  --cl-radius-xl: 1.25rem;
+  --cl-shadow-glow: 0 0 40px rgba(57, 255, 136, 0.12);
+  --cl-shadow-violet: 0 0 36px rgba(139, 92, 246, 0.18);
+  --cl-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --cl-duration: 280ms;
+  font-family: 'DM Sans', system-ui, sans-serif;
+  color: var(--cl-text);
+}
+
+.clicklab-display {
+  font-family: 'Sora', 'Outfit', system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+.clicklab-hero-title {
+  font-family: 'Sora', 'Outfit', system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.08;
+  font-size: clamp(1.85rem, 4.8vw, 3rem);
+  max-width: 14ch;
+}
+
+.clicklab-hero-line {
+  display: block;
+  opacity: 0;
+}
+
+.clicklab-hero-section.cl-in-view .clicklab-hero-line {
+  animation: cl-hero-line-in 0.85s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.08s + var(--line-i, 0) * 0.1s);
+}
+
+.clicklab-hero-line--accent {
+  position: relative;
+  margin-top: 0.06em;
+}
+
+.clicklab-hero-accent {
+  background: linear-gradient(105deg, #39ff88 0%, #6ee7a8 45%, #a7f3d0 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 24px rgba(57, 255, 136, 0.22));
+}
+
+.clicklab-hero-accent-underline {
+  position: absolute;
+  left: 0;
+  bottom: 0.06em;
+  height: 2px;
+  width: min(100%, 12rem);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #39ff88 35%, #8b5cf6 70%, transparent);
+  transform-origin: left center;
+  opacity: 0;
+}
+
+.clicklab-hero-section.cl-in-view .clicklab-hero-accent-underline {
+  animation: cl-accent-sweep 2.8s ease-in-out infinite;
+  opacity: 0.85;
+}
+
+.clicklab-hero-eyebrow {
+  opacity: 0;
+}
+
+.clicklab-hero-section.cl-in-view .clicklab-hero-eyebrow {
+  animation: cl-hero-line-in 0.75s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.05s + var(--line-i, 0) * 0.1s);
+}
+
+.clicklab-hero-section {
+  --cl-glow-x: 50%;
+  --cl-glow-y: 40%;
+}
+
+.clicklab-hero-vignette {
+  background: radial-gradient(ellipse 90% 70% at 50% 45%, transparent 30%, #030506 100%);
+}
+
+.clicklab-hero-glow-spot {
+  background: radial-gradient(
+    520px circle at var(--cl-glow-x) var(--cl-glow-y),
+    rgba(57, 255, 136, 0.07),
+    transparent 65%
+  );
+  transition: opacity 0.4s ease;
+}
+
+.clicklab-hero-glow-spot--live {
+  opacity: 1;
+}
+
+.clicklab-grid-bg--drift {
+  animation: cl-grid-drift 36s linear infinite;
+}
+
+.clicklab-hero-path {
+  stroke-dasharray: 1600;
+  stroke-dashoffset: 1600;
+  animation: cl-hero-path-draw 14s ease-in-out infinite alternate;
+}
+
+.clicklab-hero-path--b {
+  animation-duration: 18s;
+  animation-delay: -4s;
+}
+
+.clicklab-hero-trail {
+  background: linear-gradient(90deg, transparent, rgba(57, 255, 136, 0.55), rgba(139, 92, 246, 0.45), transparent);
+}
+
+.clicklab-hero-preview-frame {
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.clicklab-hero-preview-inner {
+  background: linear-gradient(165deg, rgba(13, 18, 24, 0.98) 0%, rgba(5, 7, 8, 0.98) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.clicklab-hero-showcase.cl-in-view .clicklab-hero-chip {
+  animation: cl-chip-in 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(0.35s + var(--chip-i, 0) * 0.12s);
+}
+
+.clicklab-hero-chip {
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(7, 10, 12, 0.88);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: rgba(232, 237, 242, 0.75);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.clicklab-hero-showcase.cl-in-view .clicklab-hero-chip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.clicklab-hero-chip__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.clicklab-showcase-card {
+  opacity: 0;
+  transition: box-shadow 0.45s ease, border-color 0.45s ease;
+}
+
+.clicklab-showcase-card.cl-in-view {
+  animation: cl-card-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--card-i, 0) * 0.09s);
+}
+
+.clicklab-showcase-card:hover {
+  border-color: rgba(57, 255, 136, 0.35);
+  box-shadow:
+    0 16px 40px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(57, 255, 136, 0.12),
+    0 0 32px rgba(57, 255, 136, 0.08);
+}
+
+.clicklab-showcase-card__sheen {
+  background: linear-gradient(
+    115deg,
+    transparent 35%,
+    rgba(255, 255, 255, 0.12) 48%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  animation: cl-card-sheen 1.2s ease-out forwards;
+}
+
+.clicklab-showcase-card:hover .clicklab-showcase-card__sheen {
+  animation: cl-card-sheen 0.85s ease-out forwards;
+}
+
+.clicklab-showcase-kicker {
+  font-size: 8px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+@media (min-width: 640px) {
+  .clicklab-showcase-kicker {
+    font-size: 9px;
+  }
+}
+
+.clicklab-showcase-headline {
+  font-family: 'Sora', 'Outfit', system-ui, sans-serif;
+  font-size: clamp(9px, 2.4vw, 11px);
+  font-weight: 700;
+  line-height: 1.25;
+  color: var(--accent, var(--cl-neon));
+  text-shadow: 0 0 20px color-mix(in srgb, var(--accent, #39ff88) 35%, transparent);
+}
+
+.clicklab-showcase-card.cl-in-view .clicklab-showcase-line {
+  animation: cl-chart-draw 2.2s ease-out forwards;
+  animation-delay: calc(0.4s + var(--card-i, 0) * 0.15s);
+}
+
+.clicklab-showcase-progress {
+  transform-origin: left center;
+  animation: cl-progress-grow 1.8s ease-out forwards;
+  animation-delay: calc(0.5s + var(--card-i, 0) * 0.1s);
+}
+
+.clicklab-btn-primary--premium {
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    0 4px 14px rgba(0, 0, 0, 0.35),
+    0 0 24px rgba(57, 255, 136, 0.15);
+}
+
+.clicklab-btn-primary--premium::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.35) 50%,
+    transparent 62%
+  );
+  transform: translateX(-120%);
+  animation: cl-btn-sheen 5s ease-in-out infinite;
+  pointer-events: none;
+}
+
+.clicklab-btn-secondary--premium {
+  position: relative;
+  overflow: hidden;
+}
+
+.clicklab-btn-secondary--premium::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(57, 255, 136, 0.35), rgba(139, 92, 246, 0.25));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+}
+
+.clicklab-btn-secondary--premium:hover::before {
+  opacity: 1;
+}
+
+.clicklab-hero-scroll-icon {
+  animation: cl-scroll-bob 2.4s ease-in-out infinite;
+}
+
+.clicklab-hero-divider::after {
+  content: '';
+  position: absolute;
+  left: 20%;
+  right: 20%;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.4), transparent);
+  animation: cl-divider-pulse 4s ease-in-out infinite;
+}
+
+.cl-reveal-on-scroll {
+  /* hook for IO */
+}
+
+.clicklab-hero-lead {
+  font-size: clamp(0.9375rem, 1.6vw, 1.0625rem);
+  line-height: 1.65;
+  color: var(--cl-text-muted);
+  max-width: 42ch;
+}
+
+.clicklab-panel {
+  background: var(--cl-bg-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+}
+
+.clicklab-btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.15rem;
+  border-radius: 9999px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--cl-text-muted);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: transparent;
+  transition: color var(--cl-duration) var(--cl-ease), border-color var(--cl-duration) var(--cl-ease);
+}
+
+.clicklab-btn-secondary:hover {
+  color: var(--cl-text);
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+.clicklab-dashboard-shell {
+  background: var(--cl-bg-deep);
+}
+
+.clicklab-dashboard-card {
+  background: var(--cl-bg-elevated);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: var(--cl-radius-xl);
+}
+
+.clicklab-sidebar-link-active {
+  background: rgba(57, 255, 136, 0.12);
+  color: var(--cl-neon);
+  border: 1px solid rgba(57, 255, 136, 0.22);
+}
+
+.clicklab-sidebar-link {
+  color: rgba(232, 237, 242, 0.72);
+  border: 1px solid transparent;
+}
+
+.clicklab-sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--cl-text);
+}
+
+.clicklab-grid-bg {
+  background-image:
+    linear-gradient(rgba(57, 255, 136, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 255, 136, 0.04) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 20%, transparent 75%);
+}
+
+.clicklab-glass {
+  background: var(--cl-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid var(--cl-border);
+  box-shadow: var(--cl-shadow-glow), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.clicklab-glow-border {
+  position: relative;
+}
+
+.clicklab-glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(57, 255, 136, 0.55), rgba(139, 92, 246, 0.45), rgba(34, 211, 238, 0.35));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0.65;
+  transition: opacity var(--cl-duration) var(--cl-ease);
+}
+
+.clicklab-glow-border:hover::before {
+  opacity: 1;
+}
+
+.clicklab-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.35rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: #031208;
+  background: var(--cl-neon);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: transform var(--cl-duration) var(--cl-ease), box-shadow var(--cl-duration) var(--cl-ease), background var(--cl-duration) var(--cl-ease);
+}
+
+.clicklab-btn-primary:hover {
+  transform: translateY(-1px);
+  background: #4dff9a;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+}
+
+.clicklab-btn-primary:active {
+  transform: translateY(0);
+}
+
+.clicklab-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--cl-text);
+  border: 1px solid var(--cl-border-violet);
+  background: rgba(139, 92, 246, 0.08);
+  transition: background var(--cl-duration) var(--cl-ease), border-color var(--cl-duration) var(--cl-ease);
+}
+
+.clicklab-btn-ghost:hover {
+  background: rgba(139, 92, 246, 0.16);
+  border-color: rgba(168, 85, 247, 0.45);
+}
+
+@keyframes cl-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes cl-pulse-glow {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes cl-stream {
+  0% { transform: translateY(0); opacity: 0; }
+  10% { opacity: 0.6; }
+  90% { opacity: 0.6; }
+  100% { transform: translateY(-120px); opacity: 0; }
+}
+
+@keyframes cl-chart-draw {
+  0% { stroke-dashoffset: 200; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.cl-animate-float {
+  animation: cl-float 5s ease-in-out infinite;
+}
+
+.cl-animate-pulse-glow {
+  animation: cl-pulse-glow 3s ease-in-out infinite;
+}
+
+.cl-reveal {
+  animation: cl-reveal 0.7s var(--cl-ease) both;
+}
+
+.cl-chart-line {
+  stroke-dashoffset: 200;
+  animation: cl-chart-draw 2.5s ease-out forwards;
+}
+
+.clicklab-root a:focus-visible,
+.clicklab-root button:focus-visible,
+.clicklab-root input:focus-visible,
+.clicklab-root select:focus-visible,
+.clicklab-root textarea:focus-visible {
+  outline: 2px solid var(--cl-neon);
+  outline-offset: 2px;
+}
+
+@keyframes cl-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cl-hero-line-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes cl-accent-sweep {
+  0%, 100% {
+    transform: scaleX(0.35);
+    opacity: 0.5;
+  }
+  50% {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes cl-grid-drift {
+  0% {
+    background-position: 0 0, 0 0;
+  }
+  100% {
+    background-position: 48px 48px, 48px 48px;
+  }
+}
+
+@keyframes cl-hero-path-draw {
+  0% {
+    stroke-dashoffset: 1600;
+    opacity: 0.35;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+}
+
+@keyframes cl-trail {
+  0%, 100% {
+    opacity: 0.15;
+    transform: translateX(0) rotate(var(--trail-rot, 0deg));
+  }
+  50% {
+    opacity: 0.45;
+    transform: translateX(12px) rotate(var(--trail-rot, 0deg));
+  }
+}
+
+@keyframes cl-chip-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes cl-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes cl-card-sheen {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes cl-btn-sheen {
+  0%, 72%, 100% {
+    transform: translateX(-120%);
+  }
+  28% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes cl-scroll-bob {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(4px);
+  }
+}
+
+@keyframes cl-divider-pulse {
+  0%, 100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes cl-progress-grow {
+  from {
+    transform: scaleX(0.2);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.clicklab-root .clicklab-glass {
+  overflow: visible;
+}
+
+.clicklab-scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 80;
+  height: 2px;
+  pointer-events: none;
+}
+
+.clicklab-scroll-progress__bar {
+  display: block;
+  height: 100%;
+  width: 100%;
+  transform-origin: left center;
+  background: linear-gradient(90deg, #39ff88, #8b5cf6 55%, #22d3ee);
+  box-shadow: 0 0 12px rgba(57, 255, 136, 0.45);
+  will-change: transform;
+}
+
+.cl-hover-card {
+  position: relative;
+  transition:
+    transform 0.38s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    background-color 0.35s ease;
+}
+
+.cl-hover-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(57, 255, 136, 0.38);
+  box-shadow:
+    0 20px 44px rgba(0, 0, 0, 0.48),
+    0 0 0 1px rgba(57, 255, 136, 0.12),
+    0 0 32px rgba(57, 255, 136, 0.1);
+}
+
+.cl-hover-icon {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.35s ease, color 0.35s ease;
+}
+
+.cl-hover-card:hover .cl-hover-icon {
+  transform: scale(1.1) rotate(-6deg);
+  background: rgba(57, 255, 136, 0.2);
+}
+
+.cl-hover-card:hover .cl-hover-step {
+  color: rgba(57, 255, 136, 0.55);
+  transform: translateY(-2px);
+}
+
+.cl-hover-step {
+  display: inline-block;
+  transition: color 0.35s ease, transform 0.35s ease;
+}
+
+.cl-hover-chip {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+.cl-hover-card:hover .cl-hover-chip {
+  background: rgba(34, 211, 238, 0.14);
+  color: #7dd3fc;
+}
+
+.clicklab-nav-link {
+  position: relative;
+}
+
+.clicklab-nav-link::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -6px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: var(--cl-neon);
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.clicklab-nav-link:hover::after,
+.clicklab-nav-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+.clicklab-footer-link {
+  transition: color 0.25s ease, transform 0.25s ease;
+}
+
+.clicklab-footer-link:hover {
+  transform: translateX(3px);
+}
+
+.cl-scroll-reveal:not(.cl-in-view) [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 32px, 0);
+}
+
+.cl-scroll-reveal.cl-in-view [data-reveal] {
+  opacity: 1;
+  animation: cl-section-rise 0.9s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+.cl-scroll-reveal.cl-scroll-up.cl-in-view [data-reveal] {
+  animation-name: cl-section-settle;
+}
+
+.cl-scroll-reveal:not(.cl-in-view) [data-reveal-stagger] > * {
+  opacity: 0;
+  transform: translate3d(0, 44px, 0) scale(0.97);
+}
+
+.cl-scroll-reveal.cl-in-view [data-reveal-stagger] > * {
+  opacity: 1;
+  animation: cl-card-rise 0.82s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+  animation-delay: calc(var(--cl-i, 0) * 85ms + 0.1s);
+}
+
+.cl-scroll-reveal.cl-scroll-up.cl-in-view [data-reveal-stagger] > * {
+  animation-name: cl-card-settle;
+}
+
+.cl-scroll-reveal .cl-reveal-bar {
+  transform: scaleX(0.28);
+  transform-origin: left center;
+}
+
+.cl-scroll-reveal.cl-in-view .cl-reveal-bar {
+  animation: cl-bar-grow 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: calc(var(--cl-i, 0) * 85ms + 0.28s);
+}
+
+@keyframes cl-section-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 28px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes cl-section-settle {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -22px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes cl-card-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 40px, 0) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes cl-card-settle {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -28px, 0) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes cl-bar-grow {
+  from {
+    transform: scaleX(0.2);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cl-animate-float,
+  .cl-animate-pulse-glow,
+  .cl-reveal,
+  .cl-data-stream,
+  .clicklab-hero-line,
+  .clicklab-hero-eyebrow,
+  .clicklab-hero-accent-underline,
+  .clicklab-grid-bg--drift,
+  .clicklab-hero-path,
+  .clicklab-hero-trail,
+  .clicklab-hero-scroll-icon,
+  .clicklab-btn-primary--premium::after,
+  .clicklab-showcase-card.cl-in-view,
+  .clicklab-showcase-card .clicklab-showcase-line,
+  .clicklab-showcase-progress,
+  .clicklab-showcase-card__sheen,
+  .clicklab-hero-showcase.cl-in-view .clicklab-hero-chip {
+    animation: none !important;
+  }
+
+  .clicklab-showcase-card,
+  .clicklab-hero-chip {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .clicklab-showcase-card.cl-in-view {
+    opacity: 1;
+  }
+
+  .clicklab-btn-primary:hover,
+  .clicklab-btn-ghost:hover,
+  .clicklab-btn-secondary:hover,
+  .cl-hover-card:hover,
+  .clicklab-footer-link:hover {
+    transform: none;
+  }
+
+  .cl-hover-card:hover .cl-hover-icon,
+  .cl-hover-card:hover .cl-hover-step {
+    transform: none;
+  }
+
+  .animate-pulse-slow,
+  .animate-pulse-slower,
+  .animate-gradient-xy,
+  .animate-ping {
+    animation: none !important;
+  }
+
+  .clicklab-glow-border::before {
+    opacity: 0.45;
+  }
+
+  .cl-chart-line,
+  .clicklab-showcase-line {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .clicklab-hero-glow-spot {
+    background: none;
+  }
+
+  .clicklab-hero-line,
+  .clicklab-hero-eyebrow,
+  .clicklab-hero-accent-underline,
+  .cl-scroll-reveal [data-reveal],
+  .cl-scroll-reveal [data-reveal-stagger] > *,
+  .cl-scroll-reveal .cl-reveal-bar {
+    opacity: 1 !important;
+    transform: none !important;
+    filter: none !important;
+    animation: none !important;
+  }
+
+  .clicklab-scroll-progress__bar {
+    transform: none !important;
+  }
+}

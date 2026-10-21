@@ -1,0 +1,12 @@
+# ClickLab (Nuxt 4 + Nitro) — build from frontend/; do not publish frontend/dist alone.
+[build]
+  base = "frontend"
+  command = "npm ci --legacy-peer-deps --include=dev && npm run build && npm install --prefix .netlify/functions-internal/server --no-save --os=linux --cpu=x64 sharp"
+  publish = "frontend/.output/public"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NETLIFY = "true"
+  NITRO_PRESET = "netlify"
+  NPM_CONFIG_LEGACY_PEER_DEPS = "true"
+  NODE_OPTIONS = "--max-old-space-size=8192"

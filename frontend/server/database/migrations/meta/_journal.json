@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1759071263435,
+      "tag": "0000_abnormal_the_santerians",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1759223497996,
+      "tag": "0001_tidy_whiplash",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1767814522724,
+      "tag": "0003_narrow_polaris",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789474800000,
+      "tag": "0004_polar_billing",
+      "breakpoints": true
+    }
+  ]
+}

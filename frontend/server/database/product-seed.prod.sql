@@ -1,0 +1,20 @@
+insert into
+  "public"."product" (
+    "created_at",
+    "features",
+    "id",
+    "metadata",
+    "name",
+    "stripe_price_id",
+    "stripe_product_id"
+  )
+values
+  (
+    '2025-10-14 18:44:43.212639+00',
+    '{}',
+    '3f9cfba6-8ea7-4ac3-afaf-1087806ebb98',
+    '{"avatarCredits":1}',
+    'KiThumbs Avatar',
+    'price_1RirM3GLUl17GQbQxWdbgg9M',
+    'prod_Se9fWaEnK3dh9C'
+  )

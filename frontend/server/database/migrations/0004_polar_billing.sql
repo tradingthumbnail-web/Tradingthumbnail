@@ -1,0 +1,19 @@
+ALTER TABLE "user" ADD COLUMN "polar_customer_id" text;--> statement-breakpoint
+ALTER TABLE "user" ADD CONSTRAINT "user_polar_customer_id_unique" UNIQUE("polar_customer_id");--> statement-breakpoint
+ALTER TABLE "tier" ADD COLUMN "polar_product_id" text;--> statement-breakpoint
+ALTER TABLE "tier" ADD COLUMN "polar_price_id" text;--> statement-breakpoint
+ALTER TABLE "tier" ADD COLUMN "polar_yearly_product_id" text;--> statement-breakpoint
+ALTER TABLE "tier" ADD CONSTRAINT "tier_polar_product_id_unique" UNIQUE("polar_product_id");--> statement-breakpoint
+ALTER TABLE "tier" ADD CONSTRAINT "tier_polar_price_id_unique" UNIQUE("polar_price_id");--> statement-breakpoint
+ALTER TABLE "tier" ADD CONSTRAINT "tier_polar_yearly_product_id_unique" UNIQUE("polar_yearly_product_id");--> statement-breakpoint
+ALTER TABLE "product" ADD COLUMN "polar_product_id" text;--> statement-breakpoint
+ALTER TABLE "product" ADD COLUMN "polar_price_id" text;--> statement-breakpoint
+ALTER TABLE "product" ADD CONSTRAINT "product_polar_product_id_unique" UNIQUE("polar_product_id");--> statement-breakpoint
+ALTER TABLE "product" ADD CONSTRAINT "product_polar_price_id_unique" UNIQUE("polar_price_id");--> statement-breakpoint
+ALTER TABLE "subscription" ADD COLUMN "polar_subscription_id" text;--> statement-breakpoint
+ALTER TABLE "subscription" ADD CONSTRAINT "subscription_polar_subscription_id_unique" UNIQUE("polar_subscription_id");--> statement-breakpoint
+ALTER TABLE "payment" ADD COLUMN "polar_order_id" text;--> statement-breakpoint
+ALTER TABLE "payment" ADD COLUMN "polar_checkout_id" text;--> statement-breakpoint
+ALTER TABLE "payment" ADD CONSTRAINT "payment_polar_order_id_unique" UNIQUE("polar_order_id");--> statement-breakpoint
+ALTER TABLE "payment" ADD CONSTRAINT "payment_polar_checkout_id_unique" UNIQUE("polar_checkout_id");--> statement-breakpoint
+UPDATE "product" SET "metadata" = jsonb_set(COALESCE("metadata", '{}'::jsonb), '{avatarCredits}', '1', true) WHERE "id" = '3f9cfba6-8ea7-4ac3-afaf-1087806ebb98';
