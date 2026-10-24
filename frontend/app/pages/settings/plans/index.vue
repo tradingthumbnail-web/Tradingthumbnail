@@ -3,6 +3,7 @@
         <div class="max-w-3xl mx-auto text-center mb-8">
             <h1 class="text-2xl sm:text-3xl font-semibold text-base-content">{{ $t('plans.title') }}</h1>
             <p class="mt-2 text-base-content/70">{{ $t('plans.description') }}</p>
+            <p v-if="!paymentsEnabled" class="mt-3 text-sm text-warning">Payments are temporarily disabled.</p>
         </div>
 
         <div class="flex items-center justify-center mb-6">
@@ -74,7 +75,7 @@
                     </div>
 
                     <div class="card-actions justify-end mt-4">
-                        <button class="btn btn-primary" @click="createCheckoutSession({
+                        <button class="btn btn-primary" :disabled="!paymentsEnabled" @click="createCheckoutSession({
                             productId: tier.tier.stripeProductId as string,
                             tierId: tier.tier.id,
                         })">{{ $t('plans.choose') }} {{ tier.tier.name }}</button>
@@ -93,6 +94,8 @@ import type { Locale } from '~~/server/database/schemas/user.schema';
 
 const toast = useToast();
 const { locale, t } = useI18n();
+const config = useRuntimeConfig();
+const paymentsEnabled = computed(() => String(config.public.enablePayments).toLowerCase() === 'true');
 
 type StripeRecurring = {
     interval: 'day' | 'week' | 'month' | 'year';
@@ -152,6 +155,15 @@ const createCheckoutSession = async ({
     productId: string,
     tierId: number,
 }) => {
+    if (!paymentsEnabled.value) {
+        toast.show({
+            title: 'Payments disabled',
+            message: 'Payments are temporarily disabled.',
+            status: 'warning',
+        });
+        return;
+    }
+
     // Check if the yearly flag is set
     const yearly = billingInterval.value === 'year';
     const selectedTier = data.value?.find(t => t.tier.id === tierId);

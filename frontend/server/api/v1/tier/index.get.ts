@@ -6,6 +6,7 @@ import { db } from "~~/server/database";
 import { Tier, tierTable } from "~~/server/database/schemas/tier.schema";
 import { createPolarClient, getPolarConfig } from "~~/server/services/polar/client";
 import type { PolarCatalogPrice } from "~~/server/services/polar/catalog";
+import { isPaymentsEnabled } from "~~/server/utils/payments";
 
 function mapPolarProductToPrices(product: {
     recurringInterval?: string | null;
@@ -46,6 +47,13 @@ export default defineEventHandler(async (event) => {
         const tiers = await db.query.tierTable.findMany({
             orderBy: asc(tierTable.price),
         });
+
+        if (!isPaymentsEnabled(event)) {
+            return tiers.map((tier) => ({
+                tier,
+                prices: [] as PolarCatalogPrice[] | Stripe.Price[],
+            }));
+        }
 
         const polar = accessToken ? createPolarClient(event) : null;
         const stripe = stripeSecretKey ? new Stripe(stripeSecretKey) : null;

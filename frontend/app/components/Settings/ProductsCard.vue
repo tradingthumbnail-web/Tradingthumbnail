@@ -36,7 +36,7 @@
                     </div>
 
                     <div class="card-actions justify-end mt-4">
-                        <button class="btn btn-primary btn-sm" @click="startCheckout(product.id)">{{ $t('products.buy') }}</button>
+                        <button class="btn btn-primary btn-sm" :disabled="!paymentsEnabled" @click="startCheckout(product.id)">{{ $t('products.buy') }}</button>
                     </div>
                 </div>
             </div>
@@ -50,6 +50,8 @@ import type { Locale } from '~~/server/database/schemas/user.schema';
 
 const { t, locale } = useI18n();
 const toast = useToast();
+const config = useRuntimeConfig();
+const paymentsEnabled = computed(() => String(config.public.enablePayments).toLowerCase() === 'true');
 const props = defineProps<{
     products?: Product[];
     pending?: boolean;
@@ -77,6 +79,15 @@ function getFeatures(product: Product): string[] | null {
 };
 
 const startCheckout = async (productId: string) => {
+    if (!paymentsEnabled.value) {
+        toast.show({
+            title: t('common.errors.title'),
+            message: 'Payments are temporarily disabled.',
+            status: 'warning',
+        });
+        return;
+    }
+
     try {
         const { checkoutUrl } = await $fetch('/api/v1/polar/product-checkout-session', {
             method: 'POST',

@@ -121,8 +121,8 @@ describe('billing unsubscribe and account deletion providers', () => {
         ]);
         const handler = (await import('~~/server/api/v1/user/delete-account.post')).default;
         await handler({ context: { user: { id: 'user-1' } } } as any);
-        expect(mockPolarRevoke).toHaveBeenCalledWith({ id: 'sub_polar' });
-        expect(mockStripeList).toHaveBeenCalled();
-        expect(mockStripeCancel).toHaveBeenCalledWith('sub_stripe');
+        expect(mockPolarRevoke).not.toHaveBeenCalled();
+        expect(mockStripeList).not.toHaveBeenCalled();
+        expect(mockStripeCancel).not.toHaveBeenCalled();
     });
 });

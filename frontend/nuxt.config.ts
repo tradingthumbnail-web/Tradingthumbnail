@@ -92,6 +92,7 @@ export default defineNuxtConfig({
     public: {
       appUrl: process.env.NUXT_PUBLIC_APP_URL,
       enableSignIn: process.env.NUXT_PUBLIC_ENABLE_SIGN_IN ?? 'true',
+      enablePayments: process.env.NUXT_PUBLIC_ENABLE_PAYMENTS ?? 'false',
       posthog: {
         key: process.env.NUXT_PUBLIC_POSTHOG_PUBLIC_KEY,
         host: process.env.NUXT_PUBLIC_POSTHOG_HOST,

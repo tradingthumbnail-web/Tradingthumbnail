@@ -6,6 +6,9 @@
             <Icon name="lucide:arrow-left" size="16" mode="svg" />
             {{ $t('common.back') }}
         </button>
+        <div v-if="!paymentsEnabled" class="alert alert-warning">
+            <span>Payments are temporarily disabled.</span>
+        </div>
         <div class="max-w-7xl mx-auto">
             <SettingsBillingCard :invoices="data" :pending="pending" :error="error" />
         </div>
@@ -16,8 +19,12 @@
 import { clicklabPageTitle } from '~~/shared/clicklab/page-title';
 const { t } = useI18n();
 const router = useRouter();
+const config = useRuntimeConfig();
+const paymentsEnabled = computed(() => String(config.public.enablePayments).toLowerCase() === 'true');
 
-const { data, pending, error } = await useFetch('/api/v1/billing/invoices');
+const { data, pending, error } = await useFetch('/api/v1/billing/invoices', {
+    immediate: paymentsEnabled.value,
+});
 
 const goBack = () => {
     router.back();

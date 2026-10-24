@@ -14,11 +14,13 @@ import { activityTable } from "~~/server/database/schemas/activity.schema";
 
 import { sendAccountDeletionEmail } from "~~/server/services/emails/account-deletion";
 import { createPolarClient, getPolarConfig } from "~~/server/services/polar/client";
+import { isPaymentsEnabled } from "~~/server/utils/payments";
 
 export default defineEventHandler(async (event) => {
     const user = event.context.user;
     const config = useRuntimeConfig(event);
     const stripeSecretKey = config.stripe.secretKey;
+    const paymentsEnabled = isPaymentsEnabled(event);
 
     if (!user || !user.id) {
         throw createError({ statusCode: 401, statusMessage: 'Unauthorized' });
@@ -83,35 +85,37 @@ export default defineEventHandler(async (event) => {
             await trx.delete(stylesTable).where(eq(stylesTable.createdBy, dbUser.id));
         });
 
-        // 2. Cancel Polar subscriptions for this user (new billing)
-        try {
-            const { accessToken } = getPolarConfig(event);
-            if (accessToken && polarSubscriptionIds.length > 0) {
-                const polar = createPolarClient(event);
-                for (const polarSubscriptionId of polarSubscriptionIds) {
-                    try {
-                        await polar.subscriptions.revoke({ id: polarSubscriptionId });
-                    } catch (error) {
-                        console.warn("Error canceling Polar subscription during account deletion", error);
+        if (paymentsEnabled) {
+            // 2. Cancel Polar subscriptions for this user (new billing)
+            try {
+                const { accessToken } = getPolarConfig(event);
+                if (accessToken && polarSubscriptionIds.length > 0) {
+                    const polar = createPolarClient(event);
+                    for (const polarSubscriptionId of polarSubscriptionIds) {
+                        try {
+                            await polar.subscriptions.revoke({ id: polarSubscriptionId });
+                        } catch (error) {
+                            console.warn("Error canceling Polar subscription during account deletion", error);
+                        }
                     }
                 }
+            } catch (error) {
+                console.warn("Polar cancellation skipped during account deletion", error);
             }
-        } catch (error) {
-            console.warn("Polar cancellation skipped during account deletion", error);
-        }
 
-        // 3. Delete any remaining Stripe subscriptions
-        if (dbUser.stripeCustomerId) {
-            if (!stripeSecretKey) {
-                throw createError({ statusCode: 500, statusMessage: 'Stripe secret key not found' });
+            // 3. Delete any remaining Stripe subscriptions
+            if (dbUser.stripeCustomerId) {
+                if (!stripeSecretKey) {
+                    throw createError({ statusCode: 500, statusMessage: 'Stripe secret key not found' });
+                }
+                const stripe = new Stripe(stripeSecretKey);
+                const subscriptions = await stripe.subscriptions.list({
+                    customer: dbUser.stripeCustomerId,
+                });
+                for (const subscription of subscriptions.data) {
+                    await stripe.subscriptions.cancel(subscription.id);
+                };
             }
-            const stripe = new Stripe(stripeSecretKey);
-            const subscriptions = await stripe.subscriptions.list({
-                customer: dbUser.stripeCustomerId,
-            });
-            for (const subscription of subscriptions.data) {
-                await stripe.subscriptions.cancel(subscription.id);
-            };
         }
 
         // 3. Delete the user from the database

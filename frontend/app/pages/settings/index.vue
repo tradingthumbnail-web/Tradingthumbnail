@@ -8,7 +8,7 @@
                 </div>
             </div>
 
-            <div class="card bg-base-200 border border-base-100/10 rounded-2xl shadow-lg">
+            <div v-if="paymentsEnabled" class="card bg-base-200 border border-base-100/10 rounded-2xl shadow-lg">
                 <div class="p-6">
                     <h2 class="text-lg font-bold text-base-content mb-5">{{ $t('settings.profile') }}</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -180,8 +180,8 @@
                             <div v-if="cycleInfo" class="text-sm text-base-content/50 mt-1">{{ cycleInfo }}</div>
                         </div>
                         <div class="flex gap-2 flex-wrap">
-                            <button v-if="userStore.isSubscribed" class="btn btn-ghost btn-sm" @click="manageSubscription">{{ $t('settings.manage') }}</button>
-                            <button v-if="userStore.isSubscribed" class="btn btn-error btn-sm" @click="openUnsubscribeModal">{{ $t('settings.unsubscribe') }}</button>
+                            <button v-if="paymentsEnabled && userStore.isSubscribed" class="btn btn-ghost btn-sm" @click="manageSubscription">{{ $t('settings.manage') }}</button>
+                            <button v-if="paymentsEnabled && userStore.isSubscribed" class="btn btn-error btn-sm" @click="openUnsubscribeModal">{{ $t('settings.unsubscribe') }}</button>
                             <button class="btn btn-primary btn-sm gap-1.5" @click="goToPlans">
                                 <Icon name="lucide:crown" size="14" />
                                 {{ $t('settings.seePlans') }}
@@ -193,7 +193,7 @@
                 </div>
             </div>
 
-            <div class="card bg-base-200 border border-base-100/10 rounded-2xl">
+            <div v-if="paymentsEnabled" class="card bg-base-200 border border-base-100/10 rounded-2xl">
                 <div class="p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h2 class="text-lg font-bold text-base-content">{{ $t('billing.title') }}</h2>
@@ -321,6 +321,8 @@ const { t, setLocale, locale, locales } = useI18n();
 const supportEmail = SUPPORT_EMAIL;
 const router = useRouter();
 const toast = useToast();
+const config = useRuntimeConfig();
+const paymentsEnabled = computed(() => String(config.public.enablePayments).toLowerCase() === 'true');
 
 const userStore = useUserStore();
 const changelogModalRef = ref<{ showModal: () => void; close: () => void } | null>(null);
@@ -329,7 +331,9 @@ const openChangelog = () => {
     changelogModalRef.value?.showModal();
 };
 
-const { data: invoices, pending: invoicesPending, error: invoicesError } = await useFetch('/api/v1/billing/invoices');
+const { data: invoices, pending: invoicesPending, error: invoicesError } = await useFetch('/api/v1/billing/invoices', {
+    immediate: paymentsEnabled.value,
+});
 const { data: products, pending: productsPending, error: productsError } = await useFetch<Product[]>('/api/v1/product');
 const { data: activity, pending: activityPending, error: activityError } = await useFetch('/api/v1/activity', {
     query: {
@@ -511,6 +515,10 @@ function closeUnsubscribeModal() {
 }
 
 async function confirmUnsubscribe() {
+    if (!paymentsEnabled.value) {
+        toast.show({ title: t('common.errors.title'), message: 'Payments are temporarily disabled.', status: 'warning' });
+        return;
+    }
     try {
         isUnsubscribing.value = true;
         await $fetch('/api/v1/billing/unsubscribe', {
