@@ -85,8 +85,20 @@ export function getGoogleOAuthConfig(event: any): GoogleOAuthConfig {
 }
 
 export function getGoogleOAuthCallbackUrl(event: any): string {
-    const origin = getRequestURL(event).origin;
-    return `${origin}/api/v1/auth/google/callback`;
+    const config = useRuntimeConfig(event);
+    const configuredAppUrl = config?.public?.appUrl ?? process.env.NUXT_PUBLIC_APP_URL;
+
+    if (typeof configuredAppUrl === "string" && configuredAppUrl.trim().length > 0) {
+        try {
+            const origin = new URL(configuredAppUrl).origin;
+            return `${origin}/api/v1/auth/google/callback`;
+        } catch {
+            // Fall back to the incoming request origin when app URL is malformed.
+        }
+    }
+
+    const requestOrigin = getRequestURL(event).origin;
+    return `${requestOrigin}/api/v1/auth/google/callback`;
 }
 
 function serializeFlowCookie(value: GoogleOAuthFlowCookie) {
