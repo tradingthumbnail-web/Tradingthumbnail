@@ -142,6 +142,14 @@ const googleOAuthStartHref = computed(
 
 const isResetPasswordModalOpen = ref(false);
 
+function showGoogleOauthFailureToast() {
+    toast.show({
+        title: t('auth.login.googleError.title'),
+        message: t('auth.login.googleError.message'),
+        status: 'error',
+    });
+}
+
 const isSignInEnabled = computed(() => {
     const value = config.public.enableSignIn;
     if (typeof value === 'boolean') {
@@ -265,6 +273,12 @@ onMounted(() => {
     if (stored?.remember) {
         form.remember = true;
         form.email = stored.email || '';
+    }
+
+    if (typeof route.query.oauthError === 'string') {
+        showGoogleOauthFailureToast();
+        const { oauthError: _oauthError, ...restQuery } = route.query;
+        navigateTo({ path: '/login', query: restQuery }, { replace: true });
     }
 });
 </script>

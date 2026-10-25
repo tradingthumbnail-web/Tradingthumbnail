@@ -48,9 +48,9 @@ describe("API: /api/v1/auth/google/callback.get", () => {
         mockGetQuery.mockReturnValue({});
         const handler = (await import("~~/server/api/v1/auth/google/callback.get")).default;
 
-        await expect(handler({} as any)).rejects.toMatchObject({
-            statusCode: 400,
-            message: "Google callback is missing required parameters",
+        await expect(handler({} as any)).resolves.toEqual({
+            location: "/login?oauthError=google_signin_failed",
+            statusCode: 302,
         });
     });
 
@@ -61,9 +61,9 @@ describe("API: /api/v1/auth/google/callback.get", () => {
         });
         const handler = (await import("~~/server/api/v1/auth/google/callback.get")).default;
 
-        await expect(handler({} as any)).rejects.toMatchObject({
-            statusCode: 400,
-            message: "Google authorization failed: User denied",
+        await expect(handler({} as any)).resolves.toEqual({
+            location: "/login?oauthError=google_signin_failed",
+            statusCode: 302,
         });
     });
 
@@ -80,9 +80,29 @@ describe("API: /api/v1/auth/google/callback.get", () => {
         });
 
         const handler = (await import("~~/server/api/v1/auth/google/callback.get")).default;
-        await expect(handler({} as any)).rejects.toMatchObject({
-            statusCode: 400,
-            message: "Google OAuth state mismatch",
+        await expect(handler({} as any)).resolves.toEqual({
+            location: "/login?oauthError=google_signin_failed",
+            statusCode: 302,
+        });
+    });
+
+    it("redirects to login with a safe error when token exchange fails", async () => {
+        mockGetQuery.mockReturnValue({
+            code: "oauth-code",
+            state: "state-1",
+        });
+        mockConsumeFlow.mockReturnValue({
+            state: "state-1",
+            codeVerifier: "verifier-1",
+            redirectTo: "/settings",
+            createdAt: Date.now(),
+        });
+        mockExchangeCode.mockRejectedValue(new Error("token exchange failed"));
+
+        const handler = (await import("~~/server/api/v1/auth/google/callback.get")).default;
+        await expect(handler({} as any)).resolves.toEqual({
+            location: "/login?oauthError=google_signin_failed",
+            statusCode: 302,
         });
     });
 

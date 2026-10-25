@@ -18,6 +18,8 @@ export const PUBLIC_APP_ROUTES = [
   '/blog',
 ] as const;
 
+const DEMO_STUDIO_ROUTES = ['/studio', '/studio/avatars'] as const;
+
 export type AuthRouteGuardInput = {
   path: string;
   fullPath: string;
@@ -39,6 +41,13 @@ function loginWithReturn(fullPath: string): string {
   return `/login?redirect=${encodeURIComponent(safe)}`;
 }
 
+function normalizeAuthedDestination(path: string): string {
+  if ((DEMO_STUDIO_ROUTES as readonly string[]).includes(path)) {
+    return '/home';
+  }
+  return path;
+}
+
 /**
  * Client route guard decisions (mirrors auth.global middleware policy).
  */
@@ -48,12 +57,17 @@ export function resolveAuthRouteGuard(input: AuthRouteGuardInput): AuthRouteGuar
   if (authed && (GUEST_ONLY_ROUTES as readonly string[]).includes(path)) {
     if (path === '/login') {
       const redirect = typeof query.redirect === 'string' ? query.redirect : undefined;
-      return { action: 'redirect', to: sanitizeInternalRedirect(redirect, '/home') };
+      const destination = sanitizeInternalRedirect(redirect, '/home');
+      return { action: 'redirect', to: normalizeAuthedDestination(destination) };
     }
     return { action: 'redirect', to: '/home' };
   }
 
   if (authed && path === '/') {
+    return { action: 'redirect', to: '/home' };
+  }
+
+  if (authed && (DEMO_STUDIO_ROUTES as readonly string[]).includes(path)) {
     return { action: 'redirect', to: '/home' };
   }
 
