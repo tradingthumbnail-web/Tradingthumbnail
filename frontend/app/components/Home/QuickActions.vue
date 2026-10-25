@@ -33,7 +33,7 @@ const { t } = useI18n()
 
 const actions = computed(() => [
     {
-        to: '/studio',
+        to: '/quick-thumb',
         visual: 'thumbnail' as const,
         icon: 'lucide:image-plus',
         title: t('home.quickActions.createThumbnail'),

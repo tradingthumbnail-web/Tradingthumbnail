@@ -13,12 +13,12 @@
                         {{ $t('home.description') }}
                     </p>
                     <div class="flex flex-wrap gap-3 pt-1">
-                        <NuxtLink to="/studio" class="clicklab-btn-primary !text-sm">
+                        <NuxtLink to="/quick-thumb" class="clicklab-btn-primary !text-sm">
                             <Icon name="lucide:image-plus" size="16" />
                             {{ $t('home.quickActions.createThumbnail') }}
                         </NuxtLink>
-                        <NuxtLink to="/studio" class="clicklab-btn-secondary !text-sm">
-                            Open demo studio
+                        <NuxtLink to="/quick-generation" class="clicklab-btn-secondary !text-sm">
+                            Open quick generation
                         </NuxtLink>
                     </div>
                 </div>
