@@ -4,7 +4,6 @@ import type { Tier } from '~~/server/database/schemas/tier.schema';
 import type { Locale, User } from '~~/server/database/schemas/user.schema';
 import type { Subscription } from '~~/server/database/schemas/subscription.schema';
 import { resolveModel, type ModelName, type SelectableFor } from '~~/server/constants/models-db';
-import { DEMO_UI_COOKIE, createDemoUiTier, createDemoUiUser, isDemoUiCookieActive } from '~~/shared/clicklab/demo-auth';
 
 const LOCAL_STORAGE_KEY_SIDEBAR_COLLAPSED = 'kithumbs-sidebar-collapsed';
 const LOCAL_STORAGE_KEY_SIDEBAR_ITEMS = 'kithumbs-sidebar-items';
@@ -63,16 +62,6 @@ export const useUserStore = defineStore('user', {
         async getMe({
             locale,
         }: { locale?: Locale | null } = { locale: null }) {
-            const demoCookie = useCookie(DEMO_UI_COOKIE);
-            if (isDemoUiCookieActive(demoCookie.value)) {
-                this.user = createDemoUiUser();
-                this.tier = createDemoUiTier();
-                this.subscription = null;
-                this.avatarCredits = this.user.avatarCredit;
-                if (locale) await this.checkAndCorrectLocale(locale);
-                return;
-            }
-
             try {
                 const userData = await $fetch<{ user: User | null, tier: Tier | null, subscription: Subscription | null }>('/api/v1/auth/user');
                 this.user = userData.user;

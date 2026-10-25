@@ -18,7 +18,7 @@ export default defineNuxtConfig({
     },
   },
   devtools: { enabled: process.env.NODE_ENV !== 'production' },
-  modules: ['@nuxt/icon', '@nuxtjs/i18n', '@pinia/nuxt', 'nuxt-vue3-google-signin', 'nuxt-security'],
+  modules: ['@nuxt/icon', '@nuxtjs/i18n', '@pinia/nuxt', 'nuxt-security'],
 
   security: {
     headers: false,
@@ -84,10 +84,6 @@ export default defineNuxtConfig({
     detectBrowserLanguage: false,
   },
 
-  googleSignIn: {
-    clientId: process.env.NUXT_GOOGLE_CLIENT_ID || "594613851325-oqmrpqbhdeb9enrfa8rqslobm9jacsup.apps.googleusercontent.com",
-  },
-
   runtimeConfig: {
     public: {
       appUrl: process.env.NUXT_PUBLIC_APP_URL,
@@ -128,6 +124,7 @@ export default defineNuxtConfig({
     openaiApiKey: process.env.NUXT_OPENAI_API_KEY,
 
     googleClientId: process.env.NUXT_GOOGLE_CLIENT_ID,
+    googleClientSecret: process.env.NUXT_GOOGLE_CLIENT_SECRET,
     googleSecretId: process.env.NUXT_GOOGLE_SECRET_ID,
     beehiiv: {
       apiKey: process.env.NUXT_BEEHIIV_API_KEY,

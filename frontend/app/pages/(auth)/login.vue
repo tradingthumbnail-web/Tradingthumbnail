@@ -22,13 +22,6 @@
                         <p class="mt-1 text-sm text-[var(--cl-text-muted)]">{{ $t('auth.login.description') }}</p>
                     </div>
 
-                    <ClickLabSharedSimulatedNotice
-                        compact
-                        label="Studio demo"
-                        message="Try /studio without signing in. Sign in here for real account features when your backend is configured."
-                        class="mb-5"
-                    />
-
                     <form @submit.prevent="onSubmit" class="space-y-5" novalidate>
                         <div class="form-control">
                             <label class="mb-2 text-sm font-semibold text-white">{{ $t('auth.login.email') }}</label>
@@ -72,21 +65,19 @@
                             {{ $t('auth.login.signIn') }}
                         </button>
 
-                        <button
-                            type="button"
-                            class="clicklab-btn-ghost h-12 w-full text-base"
-                            aria-label="Demo sign in for UI preview"
-                            @click="onDemoSignIn"
-                        >
-                            <Icon name="lucide:monitor-smartphone" size="18" />
-                            Demo sign in (UI only)
-                        </button>
                     </form>
 
                     <div class="divider my-8 text-xs text-[var(--cl-text-muted)]">OR</div>
 
                     <div v-if="isSignInEnabled" class="flex justify-center">
-                        <GoogleSignInButton style="color-scheme: auto;" @success="googleLoginHandleSuccess" @error="googleLoginHandleError" />
+                        <a
+                            :href="googleOAuthStartHref"
+                            class="clicklab-btn-ghost h-12 w-full text-base inline-flex items-center justify-center gap-2"
+                            aria-label="Continue with Google"
+                        >
+                            <Icon name="lucide:circle-user-round" size="18" />
+                            Continue with Google
+                        </a>
                     </div>
 
                     <ClickLabAuthLegalFooter />
@@ -117,10 +108,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-    GoogleSignInButton,
-    type CredentialResponse,
-} from "vue3-google-signin";
 import { CLICKLAB_PRODUCT_NAME } from '~~/shared/clicklab/brand';
 import { sanitizeInternalRedirect } from '~~/shared/clicklab/safe-redirect';
 
@@ -142,7 +129,6 @@ const form = reactive({
 });
 
 const route = useRoute();
-const { signInDemoUi } = useDemoAuth();
 
 const postLoginTarget = computed(() =>
     sanitizeInternalRedirect(
@@ -150,13 +136,12 @@ const postLoginTarget = computed(() =>
         '/home',
     ),
 );
+const googleOAuthStartHref = computed(
+    () => `/api/v1/auth/google/start?redirect=${encodeURIComponent(postLoginTarget.value)}`,
+);
 
 const isResetPasswordModalOpen = ref(false);
 
-async function onDemoSignIn() {
-    // Demo UI is for exploring the dashboard — ignore ?redirect=/studio from marketing CTAs.
-    await signInDemoUi('/home');
-}
 const isSignInEnabled = computed(() => {
     const value = config.public.enableSignIn;
     if (typeof value === 'boolean') {
@@ -240,35 +225,6 @@ async function onSubmit() {
         })
     }
 }
-
-const googleLoginHandleSuccess = async (response: CredentialResponse) => {
-    const { credential } = response;
-    try {
-        await $fetch('/api/v1/auth/google/validate-token', {
-            method: 'POST',
-            body: {
-                token: credential
-            }
-        });
-        await navigateTo(postLoginTarget.value);
-    } catch (error) {
-        console.error(error);
-        toast.show({
-            title: t('auth.login.googleError.title'),
-            message: t('auth.login.googleError.message'),
-            status: 'error',
-        })
-    }
-};
-
-const googleLoginHandleError = (error: unknown) => {
-    console.error(error);
-    toast.show({
-        title: t('auth.login.googleError.title'),
-        message: t('auth.login.googleError.message'),
-        status: 'error',
-    })
-};
 
 const resetPassword = async () => {
     if (!form.email) {

@@ -6,7 +6,6 @@ const BOOT_REQUIRED_VARS = [
 
 const BASE_FEATURE_REQUIRED_VARS = [
     'NUXT_GOOGLE_CLIENT_ID',
-    'NUXT_GOOGLE_SECRET_ID',
     'NUXT_S3_ACCESS_KEY_ID',
     'NUXT_S3_SECRET_ACCESS_KEY',
     'NUXT_S3_REGION',
@@ -50,7 +49,13 @@ export function validateEnvironmentVariables() {
         log.info('Payments are disabled via NUXT_PUBLIC_ENABLE_PAYMENTS=false; Stripe/Polar variables are optional.');
     }
 
+    const googleSecretPresent = Boolean(
+        process.env.NUXT_GOOGLE_CLIENT_SECRET || process.env.NUXT_GOOGLE_SECRET_ID,
+    );
     const missingFeatures = requiredFeatures.filter((varName) => !process.env[varName]);
+    if (!googleSecretPresent) {
+        missingFeatures.push('NUXT_GOOGLE_CLIENT_SECRET (or legacy NUXT_GOOGLE_SECRET_ID)');
+    }
     if (missingFeatures.length > 0) {
         log.warn(
             `Missing feature environment variables (auth, billing, storage, email will fail until set): ${missingFeatures.join(', ')}`
