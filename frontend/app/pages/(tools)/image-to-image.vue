@@ -137,6 +137,7 @@
 <script setup lang="ts">
 import type { Avatar } from '~~/server/database/schemas/avatar.schema';
 import type { Image } from '~~/server/database/schemas/image.schema';
+import { clicklabPageTitle } from '~~/shared/clicklab/page-title';
 
 const { t } = useI18n();
 const toast = useToast();

@@ -4,16 +4,37 @@ import posthog from 'posthog-js'
 
 export default defineNuxtPlugin(() => {
     const config = useRuntimeConfig();
+    const noopClient = {
+        capture: () => undefined,
+        identify: () => undefined,
+        reset: () => undefined,
+    };
+
     try {
         if (process.env.NUXT_AUTHORIZE_POSTHOG === 'false') {
-            return;
+            return {
+                provide: {
+                    posthog: () => noopClient,
+                },
+            };
         }
-        const posthogClient = posthog.init(config.public.posthog.key as string, {
-            api_host: config.public.posthog.host as string,
+
+        const posthogKey = String(config.public.posthog.key || '').trim();
+        const posthogHost = String(config.public.posthog.host || '').trim();
+        if (!posthogKey || !posthogHost) {
+            return {
+                provide: {
+                    posthog: () => noopClient,
+                },
+            };
+        }
+
+        const posthogClient = posthog.init(posthogKey, {
+            api_host: posthogHost,
             loaded: (posthog) => {
                 if (import.meta.env.MODE === 'development') posthog.debug()
             },
-        })
+        }) || noopClient;
     
         return {
             provide: {
@@ -22,6 +43,10 @@ export default defineNuxtPlugin(() => {
         };
     } catch (error) {
         console.error("Error initializing PostHog", error);
-        return;
+        return {
+            provide: {
+                posthog: () => noopClient,
+            },
+        };
     }
 })

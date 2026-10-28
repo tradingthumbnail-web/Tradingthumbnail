@@ -223,6 +223,7 @@
 <script setup lang="ts">
 import type { Style } from '~~/server/database/schemas/style.schema';
 import { useSketchTour } from '~~/app/composables/useDriver/sketch';
+import { clicklabPageTitle } from '~~/shared/clicklab/page-title';
 
 import * as fabric from 'fabric';
 import type { Image } from '~~/server/database/schemas/image.schema';

@@ -152,6 +152,7 @@
 
 <script setup lang="ts">
 import { type Image } from "~~/server/database/schemas/image.schema";
+import { clicklabPageTitle } from '~~/shared/clicklab/page-title';
 
 const { $generationApi } = useNuxtApp();
 
