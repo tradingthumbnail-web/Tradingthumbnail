@@ -31,7 +31,7 @@
                         <Icon name="lucide:more-vertical" size="14" mode="svg" />
                     </button>
                     <ul class="dropdown-content menu bg-base-100/95 backdrop-blur-xl rounded-xl z-[9999] w-40 p-1.5 shadow-2xl border border-base-100/20">
-                        <li><button class="rounded-lg text-sm py-2" @click="$emit('use', avatar)">
+                        <li><button class="rounded-lg text-sm py-2" :disabled="!isTrained" @click="handleUse">
                                 <Icon name="lucide:play" size="14" mode="svg" class="text-primary" /> {{ $t('avatars.use') }}
                             </button></li>
                         <li><button class="rounded-lg text-sm py-2 text-error hover:bg-error/10" @click="$emit('delete', avatar)">
@@ -52,7 +52,11 @@
             </div>
 
             <div class="mt-4">
-                <button class="btn btn-primary btn-sm w-full gap-2 shadow-lg hover:shadow-xl transition-all duration-200 text-[13px] font-semibold" @click="$emit('use', avatar)">
+                <button
+                    class="btn btn-primary btn-sm w-full gap-2 shadow-lg hover:shadow-xl transition-all duration-200 text-[13px] font-semibold"
+                    :disabled="!isTrained"
+                    @click="handleUse"
+                >
                     <Icon name="lucide:sparkles" size="15" mode="svg" />
                     <span>{{ $t('avatars.use') }}</span>
                 </button>
@@ -68,11 +72,18 @@ const { t } = useI18n();
 const props = defineProps<{ avatar: Avatar | any; hideMenu?: boolean }>();
 const isAvatarSendingModalOpen = ref(false);
 
-defineEmits<{
+const emit = defineEmits<{
     (e: 'use', avatar: Avatar): void;
     (e: 'edit', avatar: Avatar): void;
     (e: 'delete', avatar: Avatar): void;
 }>();
+
+const isTrained = computed(() => props.avatar?.status === 'TRAINED');
+
+function handleUse() {
+    if (!isTrained.value) return;
+    emit('use', props.avatar);
+}
 
 const statusLabel = computed(() => {
     const labels: Record<string, string> = {

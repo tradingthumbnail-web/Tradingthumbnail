@@ -46,25 +46,27 @@ export default defineEventHandler(async (event) => {
 
     const variationCount = clampPhotoshootVariations(variations);
 
+    // 1. Fetch and check the avatar before deducting credits
+    const avatar = await db.query.avatarTable.findFirst({
+        where: and(
+            eq(avatarTable.id, normalizedAvatarId),
+            eq(avatarTable.userId, user.id),
+            isNull(avatarTable.deletedAt),
+        ),
+    });
+    if (!avatar) {
+        throw createError({ statusCode: 404, statusMessage: 'Avatar not found' });
+    }
+    if (avatar.status !== 'TRAINED') {
+        throw createError({ statusCode: 400, statusMessage: 'Avatar training is not complete' });
+    }
+
     try {
         return await runChargedWork(user.id, computePhotoshootCost(variationCount), async () => {
-        // 1. Fetch and check the avatar
-        const avatar = await db.query.avatarTable.findFirst({
-            where: and(
-                eq(avatarTable.id, normalizedAvatarId),
-                eq(avatarTable.userId, user.id),
-                isNull(avatarTable.deletedAt),
-            ),
-        });
-        if (!avatar) {
-            throw createError({ statusCode: 404, statusMessage: 'Avatar not found' });
-        };
-
         // 2. Get the weights presigned URL
         console.log("--- Initializing photoshoot generation...")
-        const weightsStorageKey = generateAvatarWeightsKey(user.id, avatar.id);
+        const weightsStorageKey = generateAvatarWeightsKey(user.id, avatar.id, avatar.storageKey);
         const weightsPresignedUrl = await storage.generatePresignedUrl(weightsStorageKey, 3600 * 24);
-        console.log(" |- Presigned URL for the weights: ", weightsPresignedUrl)
 
         // 2.1. Improve the prompt
         console.log(" |- Optimizing prompt...")

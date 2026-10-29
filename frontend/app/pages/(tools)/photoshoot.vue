@@ -91,7 +91,7 @@
                     </div>
                 </div>
 
-                <BaseGenerateButton :isLoading="isGenerating" :credits="generationCost" @click="onGenerate" hotkeyEnabled :disabled="!form.avatarId" />
+                <BaseGenerateButton :isLoading="isGenerating" :credits="generationCost" @click="onGenerate" hotkeyEnabled :disabled="!canGenerate" />
             </div>
 
             <!-- Right gallery -->
@@ -200,6 +200,11 @@ const form = ref({
 const generationCost = computed(() => {
     return form.value.variations * 1;
 });
+const selectedAvatar = computed(() => {
+    if (!avatars.value || !form.value.avatarId) return null;
+    return avatars.value.find((a) => a.id === form.value.avatarId) ?? null;
+});
+const canGenerate = computed(() => Boolean(selectedAvatar.value && selectedAvatar.value.status === 'TRAINED'));
 
 const referencePreview = ref<string | null>(null);
 
@@ -216,7 +221,7 @@ function onFile(e: Event) {
 }
 
 async function onGenerate() {
-    if (!form.value.avatarId) return;
+    if (!canGenerate.value) return;
     try {
         isGenerating.value = true;
         const generatedImages = await $generationApi<Image[]>('/photoshoot', {
@@ -295,7 +300,11 @@ onMounted(async () => {
     };
 
     if (route.query.avatarId) {
-        form.value.avatarId = route.query.avatarId as string;
+        const candidateId = route.query.avatarId as string;
+        const candidateAvatar = avatars.value?.find((a) => a.id === candidateId);
+        if (!candidateAvatar || candidateAvatar.status === 'TRAINED') {
+            form.value.avatarId = candidateId;
+        }
     }
 });
 

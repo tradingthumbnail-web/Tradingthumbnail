@@ -126,12 +126,54 @@ const { data: avatars, pending, error, refresh: refreshAvatars } = await useFetc
 const avatarCredits = computed(() => userStore.user?.avatarCredit ?? 0);
 const avatarCreditsMax = computed(() => Math.max(avatarCredits.value, (userStore.tier?.avatarSlots ?? 0)) || 10);
 const avatarCreditsProgress = computed(() => Math.min(avatarCredits.value, avatarCreditsMax.value));
+const hasTrainingAvatars = computed(() => Boolean(avatars.value?.some((avatar: Avatar) => avatar.status === 'TRAINING')));
+
+let trainingPollTimer: ReturnType<typeof setInterval> | null = null;
+let isPollingAvatars = false;
+
+function stopTrainingPoll() {
+    if (trainingPollTimer) {
+        clearInterval(trainingPollTimer);
+        trainingPollTimer = null;
+    }
+}
+
+function startTrainingPollIfNeeded() {
+    if (!hasTrainingAvatars.value) {
+        stopTrainingPoll();
+        return;
+    }
+    if (trainingPollTimer) return;
+    trainingPollTimer = setInterval(async () => {
+        if (!hasTrainingAvatars.value) {
+            stopTrainingPoll();
+            return;
+        }
+        if (isPollingAvatars || pending.value) return;
+        isPollingAvatars = true;
+        try {
+            await refreshAvatars();
+        } finally {
+            isPollingAvatars = false;
+        }
+    }, 15_000);
+}
+
+watch(hasTrainingAvatars, (isTraining) => {
+    if (isTraining) {
+        startTrainingPollIfNeeded();
+    } else {
+        stopTrainingPoll();
+    }
+});
 
 async function onUse(avatar: Avatar) {
+    if (avatar.status !== 'TRAINED') return;
     await navigateTo(`/photoshoot?avatarId=${avatar.id}`);
 }
 
 async function onEdit(avatar: Avatar) {
+    if (avatar.status !== 'TRAINED') return;
     await navigateTo(`/photoshoot?avatarId=${avatar.id}`);
 }
 
@@ -164,6 +206,11 @@ async function deleteAvatar() {
 
 onMounted(async () => {
     if (!userStore.user) await userStore.getMe();
+    startTrainingPollIfNeeded();
+});
+
+onBeforeUnmount(() => {
+    stopTrainingPoll();
 });
 
 useHead({

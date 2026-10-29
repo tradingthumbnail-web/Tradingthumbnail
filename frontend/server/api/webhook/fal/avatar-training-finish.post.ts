@@ -1,12 +1,8 @@
-import { eq, sql } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import { verifyWebhookSignature } from '~~/server/utils/fal/decode-webhook-hash';
 import { db } from '~~/server/database';
 import { avatarTable } from '~~/server/database/schemas/avatar.schema';
-import { userTable } from '~~/server/database/schemas/user.schema';
-import { storage } from '~~/server/storage';
-import { generateAvatarStorageKey, generateAvatarWeightsKey } from '~~/server/storage/keys';
-import { sendAvatarTrainingCompleteEmail } from '~~/server/services/emails/avatar-training-complete';
-import { log } from '~~/server/utils/logger';
+import { persistCompletedAvatarWeights } from '~~/server/services/avatar/reconcile-avatar-training';
 
 interface WebhookPayload {
     request_id: string;
@@ -94,6 +90,14 @@ export default defineEventHandler(async (event) => {
 
         console.log(' |- Avatar found:', avatar.id);
 
+        if (avatar.status === 'TRAINED') {
+            console.log(' |- Avatar already marked TRAINED, skipping duplicate webhook processing');
+            return {
+                success: true,
+                message: 'Avatar already trained',
+            };
+        }
+
         // 6. Handle the webhook response based on status
         if (webhookData.status === 'OK' && webhookData.payload) {
             console.log(' |- Training completed successfully');
@@ -104,64 +108,17 @@ export default defineEventHandler(async (event) => {
                 console.log(' |- Downloading LORA model from:', loraUrl.slice(0, 50));
 
                 try {
-                    // Download the LORA file
-                    const loraResponse = await fetch(loraUrl);
-                    if (!loraResponse.ok) {
-                        throw new Error(`Failed to download LORA file: ${loraResponse.status}`);
-                    }
-                    const loraBuffer = Buffer.from(await loraResponse.arrayBuffer());
-
-                    // Store the LORA file
-                    const weightsStorageKey = generateAvatarWeightsKey(avatar.userId, avatar.id);
-                    await storage.put(
-                        weightsStorageKey,
-                        loraBuffer,
-                        webhookData.payload.diffusers_lora_file.content_type || 'application/octet-stream'
-                    );
-
-                    console.log(' |- LORA model stored successfully');
-
-                    // 6.2. Update avatar status to TRAINED
-                    await db
-                        .update(avatarTable)
-                        .set({
-                            status: 'TRAINED',
-                            trainedAt: new Date(),
-                            trainingMetadata: {
-                                ...avatar.trainingMetadata,
-                                requestId: webhookData.request_id,
-                                loraFileUrl: weightsStorageKey,
-                                completedAt: new Date().toISOString(),
-                            },
-                        })
-                        .where(eq(avatarTable.id, avatar.id));
-
-                    console.log(' |- Avatar status updated to TRAINED');
-
-                    // 6.3. Send email notification to user
-                    try {
-                        const user = await db.query.userTable.findFirst({
-                            where: eq(userTable.id, avatar.userId),
-                        });
-
-                        if (user && user.email && user.username) {
-                            await sendAvatarTrainingCompleteEmail({
-                                email: user.email,
-                                username: user.username,
-                                avatarName: avatar.name,
-                                userLocale: user.locale,
-                            });
-                            log.info('Avatar training complete email sent', { userId: user.id, avatarId: avatar.id });
-                        } else {
-                            log.warn('Could not send email: user not found or missing email/username', { userId: avatar.userId });
-                        }
-                    } catch (emailError) {
-                        log.error('Failed to send avatar training complete email', emailError, { avatarId: avatar.id });
-                    }
+                    await persistCompletedAvatarWeights({
+                        avatar,
+                        requestId: webhookData.request_id,
+                        loraUrl,
+                        contentType: webhookData.payload.diffusers_lora_file.content_type,
+                    });
+                    console.log(' |- LORA model stored and avatar status updated to TRAINED');
                 } catch (error) {
                     console.error('Error downloading/storing LORA model:', error);
                     
-                    // Update avatar status to FAILED
+                    // Update avatar status to FAILED only if not already TRAINED
                     await db
                         .update(avatarTable)
                         .set({
@@ -173,14 +130,19 @@ export default defineEventHandler(async (event) => {
                                 failedAt: new Date().toISOString(),
                             },
                         })
-                        .where(eq(avatarTable.id, avatar.id));
+                        .where(
+                            and(
+                                eq(avatarTable.id, avatar.id),
+                                eq(avatarTable.status, 'TRAINING')
+                            )
+                        );
 
                     throw error;
                 }
             } else {
                 console.error('No LORA file URL in webhook payload');
                 
-                // Update avatar status to FAILED
+                // Update avatar status to FAILED only if still TRAINING
                 await db
                     .update(avatarTable)
                     .set({
@@ -192,7 +154,12 @@ export default defineEventHandler(async (event) => {
                             failedAt: new Date().toISOString(),
                         },
                     })
-                    .where(eq(avatarTable.id, avatar.id));
+                    .where(
+                        and(
+                            eq(avatarTable.id, avatar.id),
+                            eq(avatarTable.status, 'TRAINING')
+                        )
+                    );
             }
         } else {
             // 6.3. Handle training failure
@@ -211,7 +178,12 @@ export default defineEventHandler(async (event) => {
                         failedAt: new Date().toISOString(),
                     },
                 })
-                .where(eq(avatarTable.id, avatar.id));
+                .where(
+                    and(
+                        eq(avatarTable.id, avatar.id),
+                        eq(avatarTable.status, 'TRAINING')
+                    )
+                );
 
             console.log(' |- Avatar status updated to FAILED');
         }

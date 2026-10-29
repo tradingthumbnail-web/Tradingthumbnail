@@ -1,6 +1,7 @@
 import { fal } from '@fal-ai/client';
 
 import { AVATAR_TRAINING_PARAMETERS, FAL_AVATAR_LORA_TRAINING_MODEL_ENDPOINT } from '~~/server/constants/avatar-training';
+import { buildFalAvatarTrainingWebhookUrl } from '~~/server/utils/public-webhook-url';
 
 // TODO: Canviar el fal client al general
 export const trainAvatarLoraModel = async (zipPresignedUrl: string) => {
@@ -20,7 +21,7 @@ export const trainAvatarLoraModel = async (zipPresignedUrl: string) => {
         });
 
         // Construct the webhook URL
-        const webhookUrl = `${config.public.appUrl}/api/webhook/fal/avatar-training-finish`;
+        const webhookUrl = buildFalAvatarTrainingWebhookUrl(config.public.appUrl);
         console.log(' |- Webhook URL:', webhookUrl);
 
         const response = await fal.queue.submit(FAL_AVATAR_LORA_TRAINING_MODEL_ENDPOINT, {

@@ -2,6 +2,7 @@ import { eq, isNull, and } from "drizzle-orm";
 
 import { db } from "~~/server/database";
 import { avatarTable } from "~~/server/database/schemas/avatar.schema";
+import { reconcileTrainingAvatars } from "~~/server/services/avatar/reconcile-avatar-training";
 
 export default defineEventHandler(async (event) => {
     const user = event.context.user;
@@ -17,7 +18,7 @@ export default defineEventHandler(async (event) => {
             ),
         });
 
-        return avatars;
+        return await reconcileTrainingAvatars(avatars);
     } catch (error) {
         console.error(error);
         throw createError({ statusCode: 500, statusMessage: 'Internal server error' });

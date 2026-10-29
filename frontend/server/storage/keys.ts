@@ -17,10 +17,14 @@ export const generateAvatarStorageKey = (userId: string, avatarId: string) => {
  * Generates a storage key for an avatar weights
  * @param userId - The user ID
  * @param avatarId - The avatar ID
+ * @param storageKey - Optional persisted avatar storage key from the database
  * @returns 
  */
-export const generateAvatarWeightsKey = (userId: string, avatarId: string) => {
-    return `${generateAvatarStorageKey(userId, avatarId)}/model.safetensors`;
+export const generateAvatarWeightsKey = (userId: string, avatarId: string, storageKey?: string | null) => {
+    const baseKey = storageKey && storageKey.trim().length > 0
+        ? storageKey.trim().replace(/\/+$/, '')
+        : generateAvatarStorageKey(userId, avatarId);
+    return `${baseKey}/model.safetensors`;
 };
 
 /**

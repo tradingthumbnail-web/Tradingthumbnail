@@ -9,8 +9,13 @@
                 <Icon name="lucide:scan-face" size="24" class="text-base-content/40" />
             </span>
             <select class="select select-bordered bg-base-100 flex-1" v-model="selectedId">
-                <option disabled>{{ $t('photoshoot.selectAvatar') }}</option>
-                <option v-for="avatar in avatars" :key="avatar.id" :value="avatar.id">{{ avatar.name }}</option>
+                <option disabled value="">{{ $t('photoshoot.selectAvatar') }}</option>
+                <option
+                    v-for="avatar in avatars"
+                    :key="avatar.id"
+                    :value="avatar.id"
+                    :disabled="avatar.status && avatar.status !== 'TRAINED'"
+                >{{ avatar.name }}</option>
             </select>
         </div>
     </div>
