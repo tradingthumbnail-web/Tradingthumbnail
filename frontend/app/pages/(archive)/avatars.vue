@@ -121,7 +121,11 @@ const isDeleteModalOpen = ref(false);
 const isDeleting = ref(false);
 const avatarToDelete = ref<Avatar | null>(null);
 
-const { data: avatars, pending, error, refresh: refreshAvatars } = await useFetch('/api/v1/avatar');
+const avatarStore = useAvatarStore();
+const avatars = computed(() => avatarStore.avatars);
+const pending = computed(() => avatarStore.loading);
+const error = computed(() => avatarStore.error);
+const refreshAvatars = () => avatarStore.fetchAvatars(true);
 
 const avatarCredits = computed(() => userStore.user?.avatarCredit ?? 0);
 const avatarCreditsMax = computed(() => Math.max(avatarCredits.value, (userStore.tier?.avatarSlots ?? 0)) || 10);
@@ -206,6 +210,7 @@ async function deleteAvatar() {
 
 onMounted(async () => {
     if (!userStore.user) await userStore.getMe();
+    await avatarStore.fetchAvatars();
     startTrainingPollIfNeeded();
 });
 

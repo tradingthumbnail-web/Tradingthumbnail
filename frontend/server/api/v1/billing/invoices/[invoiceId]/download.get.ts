@@ -46,6 +46,11 @@ export default defineEventHandler(async (event) => {
     try {
         const stripe = new Stripe(stripeSecretKey);
         const invoice = await stripe.invoices.retrieve(invoiceId);
+        const stripeCustomerId = user.stripeCustomerId;
+        const invoiceCustomerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+        if (!stripeCustomerId || !invoiceCustomerId || stripeCustomerId !== invoiceCustomerId) {
+            throw createError({ statusCode: 404, statusMessage: "Invoice not found" });
+        }
         if (!invoice || !invoice.hosted_invoice_url) {
             throw createError({ statusCode: 404, statusMessage: "Invoice not found" });
         }

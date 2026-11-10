@@ -27,7 +27,7 @@ import type { Product } from '~~/server/database/schemas/product.schema';
 
 const { t } = useI18n();
 
-const { data: products, pending, error } = await useFetch<Product[]>('/api/v1/product');
+const { data: products, pending, error } = useLazyFetch<Product[]>('/api/v1/product');
 
 useHead({ title: clicklabPageTitle(t('products.title')) });
 </script>

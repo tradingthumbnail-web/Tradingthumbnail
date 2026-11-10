@@ -105,7 +105,7 @@ const route = useRoute();
 const token = route.query.token;
 const isRetrying = ref(false);
 
-const { data: validated, error, status, execute } = await useFetch('/api/v1/auth/validate-email', {
+const { data: validated, error, status, execute } = useLazyFetch('/api/v1/auth/validate-email', {
     method: 'POST',
     body: { token }
 });

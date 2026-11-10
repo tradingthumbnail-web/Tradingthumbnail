@@ -1,4 +1,3 @@
-import { removeBackground } from '@imgly/background-removal';
 import type { Config } from '@imgly/background-removal';
 
 export const useBackgroundRemoval = () => {
@@ -31,7 +30,8 @@ export const useBackgroundRemoval = () => {
                 reader.readAsDataURL(sourceBlob);
             });
             
-            // Step 4: Configure @imgly/background-removal
+            // Step 4: Dynamically import @imgly/background-removal and configure
+            const { removeBackground } = await import('@imgly/background-removal');
             const runtimeConfig = useRuntimeConfig();
             const config: Config = {
                 publicPath: `${runtimeConfig.public.appUrl}/models/background-removal/`,

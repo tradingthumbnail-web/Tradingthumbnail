@@ -259,7 +259,8 @@ const { $generationApi } = useNuxtApp();
 const userStore = useUserStore();
 const imageStore = useImageStore();
 
-const { data: avatars } = await useFetch('/api/v1/avatar');
+const avatarStore = useAvatarStore();
+const avatars = computed(() => avatarStore.avatars);
 
 const steps = ['Basics', 'Type', 'Avatar', 'Details'];
 const currentStep = ref(0);
@@ -496,6 +497,7 @@ useHead({ title: clicklabPageTitle(t('quickThumb.title')) });
 const { composeThumbnail } = useKiThumbsComposer();
 
 onMounted(async () => {
+    avatarStore.fetchAvatars();
     window.addEventListener('resize', fitPreviewCanvas);
     await nextTick(async () => {
         initPreviewCanvas();

@@ -114,7 +114,7 @@ type TierWithPrices = {
     prices: StripePrice[];
 };
 
-const { data, pending, error } = await useFetch<TierWithPrices[]>('/api/v1/tier');
+const { data, pending, error } = useLazyFetch<TierWithPrices[]>('/api/v1/tier');
 
 function getPriceByInterval(prices: StripePrice[] | undefined, interval: 'month' | 'year'): StripePrice | undefined {
     return (prices ?? []).find(p => p.recurring?.interval === interval);

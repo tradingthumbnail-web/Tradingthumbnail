@@ -1,5 +1,41 @@
 <template>
   <div class="mx-auto max-w-[1600px] p-4 lg:p-6">
+    <!-- Dedicated Creative Workspace Tools Bar -->
+    <div class="mb-6 rounded-2xl border border-white/10 bg-[var(--cl-bg-elevated)] p-4 sm:p-5">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
+        <div>
+          <h2 class="text-xs font-semibold uppercase tracking-wider text-[var(--cl-neon)]">Creative Workspace Tools</h2>
+          <p class="text-xs text-[var(--cl-text-muted)]">Jump directly into specialized generation tools or compose your trading thumbnail below.</p>
+        </div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+        <NuxtLink to="/quick-thumb" class="flex items-center gap-2 rounded-xl border border-white/5 bg-black/30 px-3 py-2 text-xs font-medium text-white hover:border-[var(--cl-neon)]/40 hover:bg-white/5 transition-all">
+          <Icon name="lucide:flame" size="16" class="text-[var(--cl-neon)]" />
+          <span>Quick Thumb</span>
+        </NuxtLink>
+        <NuxtLink to="/quick-generation" class="flex items-center gap-2 rounded-xl border border-white/5 bg-black/30 px-3 py-2 text-xs font-medium text-white hover:border-[var(--cl-neon)]/40 hover:bg-white/5 transition-all">
+          <Icon name="lucide:zap" size="16" class="text-primary" />
+          <span>Quick Gen</span>
+        </NuxtLink>
+        <NuxtLink to="/sketch" class="flex items-center gap-2 rounded-xl border border-white/5 bg-black/30 px-3 py-2 text-xs font-medium text-white hover:border-[var(--cl-neon)]/40 hover:bg-white/5 transition-all">
+          <Icon name="lucide:pencil-line" size="16" class="text-secondary" />
+          <span>AI Sketch</span>
+        </NuxtLink>
+        <NuxtLink to="/image-to-image" class="flex items-center gap-2 rounded-xl border border-white/5 bg-black/30 px-3 py-2 text-xs font-medium text-white hover:border-[var(--cl-neon)]/40 hover:bg-white/5 transition-all">
+          <Icon name="lucide:image-plus" size="16" class="text-accent" />
+          <span>Image-to-Image</span>
+        </NuxtLink>
+        <NuxtLink to="/photoshoot" class="flex items-center gap-2 rounded-xl border border-white/5 bg-black/30 px-3 py-2 text-xs font-medium text-white hover:border-[var(--cl-neon)]/40 hover:bg-white/5 transition-all">
+          <Icon name="lucide:camera" size="16" class="text-info" />
+          <span>Photoshoot</span>
+        </NuxtLink>
+        <NuxtLink to="/avatars" class="flex items-center gap-2 rounded-xl border border-white/5 bg-black/30 px-3 py-2 text-xs font-medium text-white hover:border-[var(--cl-neon)]/40 hover:bg-white/5 transition-all">
+          <Icon name="lucide:circle-user-round" size="16" class="text-warning" />
+          <span>Avatars</span>
+        </NuxtLink>
+      </div>
+    </div>
+
     <ClickLabSharedSimulatedNotice
       class="mb-6"
       message="Thumbnail generation, editing, and export on this page are simulated in your browser. No AI models or server uploads are called."
@@ -68,7 +104,7 @@
           <legend class="mb-2 text-xs font-semibold uppercase tracking-wider text-white/50">Avatar</legend>
           <div class="space-y-2">
             <label
-              v-for="av in demoAvatars"
+              v-for="av in availableAvatars"
               :key="av.id"
               class="flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition-colors"
               :class="state.avatarId === av.id ? 'border-[var(--cl-neon)]/50 bg-[var(--cl-neon)]/5' : 'border-white/10 bg-black/20'"
@@ -78,7 +114,7 @@
               <div class="flex-1">
                 <p class="text-sm font-medium text-white">{{ av.name }}</p>
                 <p class="text-xs" :class="av.trained ? 'text-[var(--cl-neon)]' : 'text-[var(--cl-text-muted)]'">
-                  {{ av.trained ? 'Trained · demo' : 'Not trained — create in Avatars' }}
+                  {{ av.trained ? (av.isReal ? 'Trained avatar' : 'Trained · demo') : 'Not trained' }}
                 </p>
               </div>
             </label>
@@ -168,12 +204,14 @@ import { CLICKLAB_PLATFORMS } from '~~/shared/clicklab/platforms';
 import { DEMO_AVATARS, DEMO_RECENT_PROJECTS } from '~~/shared/clicklab/demo-data';
 import { CLICKLAB_PRODUCT_NAME } from '~~/shared/clicklab/brand';
 
-definePageMeta({ layout: 'clicklab-studio' });
+definePageMeta({ layout: 'default' });
 
 useHead({ title: `Studio | ${CLICKLAB_PRODUCT_NAME}` });
 
 const route = useRoute();
 const toast = useToast();
+const userStore = useUserStore();
+const avatarStore = useAvatarStore();
 
 const {
   state,
@@ -187,7 +225,18 @@ const {
   runDemoGeneration,
 } = useClickLabStudio();
 
-const demoAvatars = DEMO_AVATARS;
+const availableAvatars = computed(() => {
+  if (userStore.user && avatarStore.avatars?.length > 0) {
+    return avatarStore.avatars.map((a: any) => ({
+      id: a.id,
+      name: a.name,
+      trained: a.status === 'TRAINED',
+      accent: '#39ff88',
+      isReal: true,
+    }));
+  }
+  return DEMO_AVATARS.map(a => ({ ...a, isReal: false }));
+});
 
 const nicheOptions = computed(() =>
   TRADING_NICHES.map((n) => ({ value: n.id, label: n.title })),
@@ -218,6 +267,9 @@ const previewAspect = computed(() => {
 });
 
 onMounted(() => {
+  if (userStore.user) {
+    avatarStore.fetchAvatars();
+  }
   applyNicheFromQuery(typeof route.query.niche === 'string' ? route.query.niche : undefined);
 });
 

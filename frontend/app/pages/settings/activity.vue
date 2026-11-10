@@ -19,7 +19,7 @@ import { clicklabPageTitle } from '~~/shared/clicklab/page-title';
 const { t } = useI18n();
 const router = useRouter();
 
-const { data, pending, error } = await useFetch('/api/v1/activity');
+const { data, pending, error } = useLazyFetch('/api/v1/activity');
 
 const goBack = () => {
     router.back();

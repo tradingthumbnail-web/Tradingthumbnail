@@ -151,6 +151,7 @@
 </template>
 
 <script setup lang="ts">
+import { clicklabPageTitle } from '~~/shared/clicklab/page-title';
 import type { Image } from '~~/server/database/schemas/image.schema';
 import { imageTypes, type ImageType } from '~~/shared/enums/image-types';
 

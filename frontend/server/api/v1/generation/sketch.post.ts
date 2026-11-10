@@ -23,6 +23,13 @@ export default defineEventHandler(async (event) => {
 
     const { canvasDataURL, layoutMetadata, styleId, referenceType, avatarId, reference, avatarTrainingImageIndex } = await readBody(event);
 
+    if (!canvasDataURL || typeof canvasDataURL !== 'string' || !canvasDataURL.trim()) {
+        throw createError({ statusCode: 400, statusMessage: 'Canvas is required' });
+    }
+    if (referenceType === 'avatar' && !avatarId) {
+        throw createError({ statusCode: 400, statusMessage: 'Avatar is required' });
+    }
+
     try {
         return await runChargedWork(user.id, FIXED_GENERATION_COSTS.sketch, async () => {
         // 1. Check if we have a style
@@ -104,11 +111,13 @@ export default defineEventHandler(async (event) => {
         console.log(" |- Sketch generation completed successfully 💜")
         return image;
         });
-    } catch (error) {
+    } catch (error: any) {
         if (error && typeof error === 'object' && 'statusCode' in error) {
             throw error;
         }
-        console.error(error);
+        console.error('-x- Sketch generation request failed', {
+            message: error instanceof Error ? error.message : 'Unknown error',
+        });
         throw createError({ statusCode: 500, statusMessage: 'Internal server error' });
     }
 });

@@ -41,6 +41,8 @@ export const useUserStore = defineStore('user', {
         tier: null as Tier | null,
         subscription: null as Subscription | null,
         avatarCredits: 0,
+        hasCheckedAuth: false,
+        authPromise: null as Promise<User | null> | null,
         sidebar: {
             collapsed: typeof localStorage !== 'undefined' && localStorage.getItem(LOCAL_STORAGE_KEY_SIDEBAR_COLLAPSED) === 'true',
             items: typeof localStorage !== 'undefined' 
@@ -61,24 +63,47 @@ export const useUserStore = defineStore('user', {
     actions: {
         async getMe({
             locale,
-        }: { locale?: Locale | null } = { locale: null }) {
-            try {
-                const userData = await $fetch<{ user: User | null, tier: Tier | null, subscription: Subscription | null }>('/api/v1/auth/user');
-                this.user = userData.user;
-                this.tier = userData.tier;
-                this.subscription = userData.subscription;
-                this.avatarCredits = userData.user?.avatarCredit ?? 0;
+            force = false,
+        }: { locale?: Locale | null; force?: boolean } = { locale: null, force: false }): Promise<User | null> {
+            if (!force && this.hasCheckedAuth && this.user) {
                 if (locale) await this.checkAndCorrectLocale(locale);
-            } catch (error) {
-                console.error(error);
-                this.cleanUser();
-            };
+                return this.user;
+            }
+            if (this.authPromise) {
+                return this.authPromise;
+            }
+            this.authPromise = (async () => {
+                try {
+                    const userData = await $fetch<{ user: User | null, tier: Tier | null, subscription: Subscription | null }>('/api/v1/auth/user');
+                    this.user = userData.user;
+                    this.tier = userData.tier;
+                    this.subscription = userData.subscription;
+                    this.avatarCredits = userData.user?.avatarCredit ?? 0;
+                    this.hasCheckedAuth = true;
+                    if (locale) await this.checkAndCorrectLocale(locale);
+                    return this.user;
+                } catch (error) {
+                    this.cleanUser();
+                    this.hasCheckedAuth = true;
+                    return null;
+                } finally {
+                    this.authPromise = null;
+                }
+            })();
+            return this.authPromise;
         },
 
         cleanUser() {
             this.user = null;
             this.tier = null;
             this.subscription = null;
+            this.avatarCredits = 0;
+            this.hasCheckedAuth = true;
+            this.authPromise = null;
+        },
+
+        async refreshSession(locale?: Locale | null) {
+            return this.getMe({ locale, force: true });
         },
 
         async payForGeneration(_amountToPay: number) {

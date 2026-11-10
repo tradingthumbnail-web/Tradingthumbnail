@@ -144,4 +144,47 @@ describe('API: /api/v1/generation/image-to-image.post', () => {
       newImageUrl: 'https://saved-image.example',
     });
   });
+
+  it('accepts false boolean values for keepBackground and matchLighting and strips data URL prefix', async () => {
+    mockReadBody.mockResolvedValue({
+      avatarId: 'avatar-1',
+      keepBackground: false,
+      matchLighting: false,
+      referenceImageBase64: `data:image/jpeg;base64,${Buffer.from('raw-jpeg-bytes').toString('base64')}`,
+      creativityLevel: 3,
+    });
+
+    const handler = (await import('~~/server/api/v1/generation/image-to-image.post')).default;
+    const result = await handler({ context: { user: mockUser } } as any);
+
+    expect(storage.put).toHaveBeenCalledWith(
+      'user-1/reference-image.png',
+      Buffer.from('raw-jpeg-bytes'),
+      'image/png',
+    );
+    expect(result).toMatchObject({
+      generatedImage: { id: 'image-123', type: 'CHARACTER' },
+      newImageUrl: 'https://saved-image.example',
+    });
+  });
+
+  it('continues with a fallback prompt when OpenRouter description or prompt generation fails', async () => {
+    vi.mocked(generateImageDescriptionForImageToImage).mockRejectedValueOnce(
+      Object.assign(new Error('402 Insufficient credits'), { status: 402 }),
+    );
+
+    const handler = (await import('~~/server/api/v1/generation/image-to-image.post')).default;
+    const result = await handler({ context: { user: mockUser } } as any);
+
+    expect(generateImageToImage).toHaveBeenCalledWith(expect.objectContaining({
+      model: 'fal-ai/flux-lora/image-to-image',
+      prompt: expect.stringContaining('YouTube thumbnail'),
+      loraPresignedUrl: 'https://weights.example',
+      referenceImageURL: 'https://reference.example',
+    }));
+    expect(result).toMatchObject({
+      generatedImage: { id: 'image-123', type: 'CHARACTER' },
+      newImageUrl: 'https://saved-image.example',
+    });
+  });
 });

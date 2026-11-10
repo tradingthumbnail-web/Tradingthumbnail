@@ -21,14 +21,14 @@
             leave-from-class="translate-x-0"
             leave-to-class="-translate-x-full"
         >
-            <aside v-if="isDrawerOpen" class="fixed left-0 top-0 z-50 h-screen w-72 bg-base-200/95 backdrop-blur-xl border-r border-base-100/10 lg:hidden flex flex-col shadow-2xl">
-                <div class="flex items-center justify-between gap-3 px-5 py-5 border-b border-base-100/10">
+            <aside v-if="isDrawerOpen" class="fixed left-0 top-0 z-50 h-screen w-72 bg-[#070a0d]/98 backdrop-blur-2xl border-r border-white/10 lg:hidden flex flex-col shadow-2xl">
+                <div class="flex items-center justify-between gap-3 px-5 py-5 border-b border-white/10">
                     <div class="flex items-center gap-3">
-                        <img src="~/assets/img/clicklab-mark.svg" alt="ClickLab" class="w-9 h-9" :draggable="false" />
-                        <span class="text-lg font-semibold tracking-tight"><span class="text-primary">Click</span>Lab</span>
+                        <img src="~/assets/img/clicklab-mark.svg" alt="ClickLab" class="w-8 h-8 drop-shadow-[0_0_12px_rgba(57,255,136,0.35)]" :draggable="false" />
+                        <span class="text-lg font-bold tracking-tight"><span class="text-[var(--cl-neon)]">Click</span><span class="text-white">Lab</span></span>
                     </div>
                     <button
-                        class="btn btn-ghost btn-sm btn-square hover:bg-base-100/50"
+                        class="btn btn-ghost btn-sm btn-square text-white/60 hover:text-white hover:bg-white/10"
                         type="button"
                         @click="closeDrawer">
                         <Icon name="lucide:x" size="18" />
@@ -36,31 +36,31 @@
                 </div>
 
                 <nav class="flex-1 overflow-y-auto px-3 py-4">
-                    <ul class="space-y-5">
+                    <ul class="space-y-6">
                         <li v-for="section in sections" :key="section.id" :data-tour="`sidebar:${section.id}`">
                             <button type="button"
-                                class="flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-base-content/50 hover:text-base-content/70 transition-colors"
+                                class="flex w-full items-center justify-between px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white/70 transition-colors"
                                 @click="userStore.toggleSidebarItem(section.id)" :aria-expanded="userStore.sidebar.items[section.id]">
                                 <span>{{ section.label }}</span>
                                 <Icon :name="userStore.sidebar.items[section.id] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
-                                    class="transition-transform duration-200" size="12" />
+                                    class="transition-transform duration-200 text-white/30" size="12" />
                             </button>
 
-                            <ul class="mt-1.5 space-y-0.5" v-show="userStore.sidebar.items[section.id]">
+                            <ul class="mt-2 space-y-1" v-show="userStore.sidebar.items[section.id]">
                                 <li v-for="item in section.items" :key="item.to" :data-tour="item.dataTourKey ? item.dataTourKey : undefined">
                                     <NuxtLink :to="item.to" @click="closeDrawer" :aria-current="isItemActive(item.to) ? 'page' : undefined" :class="[
-                                        'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                                        'group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200',
                                         isItemActive(item.to)
                                             ? 'clicklab-sidebar-link-active'
                                             : 'clicklab-sidebar-link'
                                     ]">
                                         <Icon :name="item.icon" :class="[
                                             'transition-all duration-200 flex-shrink-0',
-                                            isItemActive(item.to) ? 'scale-110' : 'group-hover:text-primary group-hover:scale-105'
+                                            isItemActive(item.to) ? 'scale-110 text-[var(--cl-neon)]' : 'text-white/60 group-hover:text-white group-hover:scale-105'
                                         ]" size="18" />
                                         <span class="flex-1">{{ item.label }}</span>
                                         <Icon name="lucide:chevron-right"
-                                            class="text-base-content/30 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0.5" size="14" />
+                                            class="text-white/20 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0.5" size="14" />
                                     </NuxtLink>
                                 </li>
                             </ul>
@@ -68,29 +68,31 @@
                     </ul>
                 </nav>
 
-                <div class="border-t border-base-100/10 px-5 py-4 bg-base-100/5">
-                    <div class="mb-2.5 flex items-center justify-between text-xs">
-                        <span class="text-base-content/60 font-medium">{{ $t('common.credits') }}</span>
-                        <span class="text-base-content/80 font-semibold tabular-nums">{{ creditsLabel }}</span>
+                <div class="border-t border-white/10 p-4 bg-[#0a0e14]/60">
+                    <div class="rounded-xl border border-white/8 bg-[#0d1219] p-3.5 shadow-sm">
+                        <div class="mb-2 flex items-center justify-between text-xs">
+                            <span class="text-white/50 font-medium">{{ $t('common.credits') }}</span>
+                            <span class="text-white font-semibold tabular-nums text-sm">{{ creditsLabel }}</span>
+                        </div>
+                        <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                            <div v-if="progressMax > 0" class="h-full bg-gradient-to-r from-[var(--cl-neon)] to-[var(--cl-cyan)] rounded-full transition-all duration-500" :style="{width: `${(progressValue / progressMax) * 100}%`}"></div>
+                        </div>
+                        <NuxtLink
+                            v-if="!userStore.tier"
+                            to="/settings/plans"
+                            @click="closeDrawer"
+                            class="clicklab-btn-primary !py-2 !text-xs w-full mt-3 justify-center"
+                        >
+                            <Icon name="lucide:sparkles" size="13" />
+                            {{ $t('home.upgradePlan') }}
+                        </NuxtLink>
                     </div>
-                    <div class="h-1.5 w-full bg-base-300/50 rounded-full overflow-hidden">
-                        <div v-if="progressMax > 0" class="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500" :style="{width: `${(progressValue / progressMax) * 100}%`}"></div>
-                    </div>
-                    <NuxtLink
-                        v-if="!userStore.tier"
-                        to="/settings/plans"
-                        @click="closeDrawer"
-                        class="btn btn-accent btn-sm w-full mt-3 gap-2"
-                    >
-                        <Icon name="lucide:sparkles" size="14" />
-                        {{ $t('home.upgradePlan') }}
-                    </NuxtLink>
                 </div>
 
-                <div class="border-t border-base-100/10 px-3 py-3">
+                <div class="border-t border-white/10 px-3 py-3">
                     <NuxtLink to="/settings"
                         @click="closeDrawer"
-                        class="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-base-content/70 transition-all hover:bg-base-100/50 hover:text-base-content">
+                        class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-white/70 transition-all hover:bg-white/5 hover:text-white">
                         <Icon name="lucide:settings" size="18" mode="svg" />
                         <span>{{ $t('header.settings') }}</span>
                     </NuxtLink>
@@ -100,16 +102,16 @@
     </Teleport>
 
     <aside :class="[
-        'hidden lg:flex h-screen flex-col border-r border-white/8 bg-[#0a0e12] transition-all duration-300 ease-out',
+        'hidden lg:flex h-screen flex-col border-r border-white/8 bg-[#070a0d] transition-all duration-300 ease-out',
         userStore.sidebar.collapsed ? 'w-[72px]' : 'w-64'
     ]">
         <div class="flex items-center gap-3 px-4 py-5" :class="userStore.sidebar.collapsed ? 'justify-center' : 'justify-between'">
             <div class="flex items-center gap-3 overflow-hidden" v-if="!userStore.sidebar.collapsed">
-                <img src="~/assets/img/clicklab-mark.svg" alt="ClickLab" class="w-9 h-9 flex-shrink-0" :draggable="false" />
-                <span class="text-lg font-semibold tracking-tight whitespace-nowrap"><span class="text-primary">Click</span>Lab</span>
+                <img src="~/assets/img/clicklab-mark.svg" alt="ClickLab" class="w-8 h-8 flex-shrink-0 drop-shadow-[0_0_12px_rgba(57,255,136,0.35)]" :draggable="false" />
+                <span class="text-lg font-bold tracking-tight whitespace-nowrap"><span class="text-[var(--cl-neon)]">Click</span><span class="text-white">Lab</span></span>
             </div>
             <button
-                class="flex h-8 w-8 items-center justify-center rounded-lg border border-base-100/20 bg-base-100/30 text-base-content/70 transition-all hover:border-primary/50 hover:text-primary hover:bg-base-100/50"
+                class="flex h-8 w-8 items-center justify-center rounded-lg border border-white/10 bg-white/[0.03] text-white/60 transition-all hover:border-[var(--cl-neon)]/40 hover:text-[var(--cl-neon)] hover:bg-white/[0.08]"
                 type="button" @click="userStore.toggleSidebar" :aria-expanded="!userStore.sidebar.collapsed">
                 <Icon :name="userStore.sidebar.collapsed ? 'lucide:panel-right-open' : 'lucide:panel-left-close'" size="16" mode="svg" />
                 <span class="sr-only">{{ $t('header.toggleSidebar') }}</span>
@@ -117,28 +119,28 @@
         </div>
 
         <nav class="flex-1 overflow-y-auto px-3 py-2">
-            <ul class="space-y-5">
+            <ul class="space-y-6">
                 <li v-for="section in sections" :key="section.id" :data-tour="`sidebar:${section.id}`">
                     <div v-if="!userStore.sidebar.collapsed">
                         <button type="button"
-                            class="flex w-full items-center justify-between px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-base-content/50 hover:text-base-content/70 transition-colors"
+                            class="flex w-full items-center justify-between px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white/40 hover:text-white/70 transition-colors"
                             @click="userStore.toggleSidebarItem(section.id)" :aria-expanded="userStore.sidebar.items[section.id]">
                             <span>{{ section.label }}</span>
                             <Icon :name="userStore.sidebar.items[section.id] ? 'lucide:chevron-up' : 'lucide:chevron-down'"
-                                class="transition-transform duration-200" size="12" />
+                                class="transition-transform duration-200 text-white/30" size="12" />
                         </button>
                     </div>
-                    <div v-else class="h-px bg-base-100/10 mx-2 my-2"></div>
+                    <div v-else class="h-px bg-white/5 mx-2 my-2"></div>
 
-                    <ul :class="['mt-1.5', userStore.sidebar.collapsed ? 'space-y-1' : 'space-y-0.5']" v-show="userStore.sidebar.collapsed || userStore.sidebar.items[section.id]">
+                    <ul :class="['mt-1.5', userStore.sidebar.collapsed ? 'space-y-1.5' : 'space-y-1']" v-show="userStore.sidebar.collapsed || userStore.sidebar.items[section.id]">
                         <li v-for="item in section.items" :key="item.to" :data-tour="item.dataTourKey ? item.dataTourKey : undefined">
                             <NuxtLink :to="item.to" :aria-current="isItemActive(item.to) ? 'page' : undefined" 
-                                class="group relative"
+                                class="group relative block"
                                 :class="userStore.sidebar.collapsed ? 'flex justify-center' : ''"
                                 @mouseenter="userStore.sidebar.collapsed ? showSidebarTooltip($event, item.label) : null"
                                 @mouseleave="userStore.sidebar.collapsed ? hideSidebarTooltip() : null">
                                 <div :class="[
-                                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200',
+                                    'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200',
                                     userStore.sidebar.collapsed ? 'justify-center w-11 h-11 mx-auto' : 'justify-start',
                                     isItemActive(item.to)
                                         ? 'clicklab-sidebar-link-active'
@@ -146,12 +148,12 @@
                                 ]">
                                     <Icon :name="item.icon" :class="[
                                         'transition-all duration-200 flex-shrink-0',
-                                        isItemActive(item.to) ? 'scale-110' : 'group-hover:text-primary group-hover:scale-105'
+                                        isItemActive(item.to) ? 'scale-110 text-[var(--cl-neon)]' : 'text-white/60 group-hover:text-white group-hover:scale-105'
                                     ]" size="18" />
                                     <span v-if="!userStore.sidebar.collapsed" class="flex-1">{{ item.label }}</span>
                                     <span v-else class="sr-only">{{ item.label }}</span>
                                     <Icon v-if="!userStore.sidebar.collapsed" name="lucide:chevron-right"
-                                        class="text-base-content/30 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0.5" size="14" />
+                                        class="text-white/20 opacity-0 group-hover:opacity-100 transition-all duration-200 group-hover:translate-x-0.5" size="14" />
                                 </div>
                             </NuxtLink>
                         </li>
@@ -160,42 +162,42 @@
             </ul>
         </nav>
 
-        <div class="border-t border-base-100/10 px-4 py-4 bg-base-100/5 overflow-visible">
-            <div class="group relative" :class="userStore.sidebar.collapsed ? 'flex flex-col items-center gap-1' : ''">
-                <div v-if="!userStore.sidebar.collapsed" class="mb-2.5 flex items-center justify-between text-xs">
-                    <span class="text-base-content/60 font-medium">{{ $t('common.credits') }}</span>
-                    <span class="text-base-content/80 font-semibold tabular-nums">{{ creditsLabel }}</span>
+        <div class="border-t border-white/10 p-3 bg-[#0a0e14]/60 overflow-visible">
+            <div class="rounded-xl border border-white/8 bg-[#0d1219] p-3 shadow-sm" :class="userStore.sidebar.collapsed ? 'flex flex-col items-center gap-1.5' : ''">
+                <div v-if="!userStore.sidebar.collapsed" class="mb-2 flex items-center justify-between text-xs">
+                    <span class="text-white/50 font-medium">{{ $t('common.credits') }}</span>
+                    <span class="text-white font-semibold tabular-nums text-xs">{{ creditsLabel }}</span>
                 </div>
                 <template v-if="userStore.sidebar.collapsed">
-                    <span class="text-[10px] font-semibold tabular-nums text-base-content/80">{{ creditsLabel }}</span>
-                    <div class="w-10 h-1.5 bg-base-300/50 rounded-full overflow-hidden">
-                        <div v-if="progressMax > 0" class="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500" :style="{width: `${(progressValue / progressMax) * 100}%`}"></div>
+                    <span class="text-[10px] font-bold tabular-nums text-white/80">{{ creditsLabel }}</span>
+                    <div class="w-10 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                        <div v-if="progressMax > 0" class="h-full bg-gradient-to-r from-[var(--cl-neon)] to-[var(--cl-cyan)] rounded-full transition-all duration-500" :style="{width: `${(progressValue / progressMax) * 100}%`}"></div>
                     </div>
                 </template>
                 <template v-else>
-                    <div class="h-1.5 w-full bg-base-300/50 rounded-full overflow-hidden">
-                        <div v-if="progressMax > 0" class="h-full bg-gradient-to-r from-primary to-secondary rounded-full transition-all duration-500" :style="{width: `${(progressValue / progressMax) * 100}%`}"></div>
+                    <div class="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div v-if="progressMax > 0" class="h-full bg-gradient-to-r from-[var(--cl-neon)] to-[var(--cl-cyan)] rounded-full transition-all duration-500" :style="{width: `${(progressValue / progressMax) * 100}%`}"></div>
                     </div>
                 </template>
             </div>
             <NuxtLink
                 v-if="!userStore.tier && !userStore.sidebar.collapsed"
                 to="/settings/plans"
-                class="btn btn-accent btn-sm w-full mt-3 gap-2"
+                class="clicklab-btn-primary !py-2 !text-xs w-full mt-2.5 justify-center shadow-md hover:shadow-lg"
             >
-                <Icon name="lucide:sparkles" size="14" />
+                <Icon name="lucide:sparkles" size="13" />
                 {{ $t('home.upgradePlan') }}
             </NuxtLink>
         </div>
 
-        <div class="border-t border-base-100/10 px-3 py-3">
+        <div class="border-t border-white/10 px-3 py-3">
             <NuxtLink to="/settings"
-                class="group relative"
+                class="group relative block"
                 :class="userStore.sidebar.collapsed ? 'flex justify-center' : ''"
                 @mouseenter="userStore.sidebar.collapsed ? showSidebarTooltip($event, $t('header.settings')) : null"
                 @mouseleave="userStore.sidebar.collapsed ? hideSidebarTooltip() : null">
                 <div :class="[
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-base-content/70 transition-all hover:bg-base-100/50 hover:text-base-content',
+                    'flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-white/70 transition-all hover:bg-white/5 hover:text-white',
                     userStore.sidebar.collapsed ? 'justify-center w-11 h-11 mx-auto' : 'justify-start'
                 ]">
                     <Icon name="lucide:settings" size="18" mode="svg" />

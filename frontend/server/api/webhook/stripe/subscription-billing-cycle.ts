@@ -66,6 +66,12 @@ export default defineEventHandler(async (event) => {
                 // Update the credits and everything from the user
                 const billingReason = invoice.billing_reason;
                 if (billingReason === "subscription_cycle") {
+                    if (!invoice.id) {
+                        throw createError({
+                            statusCode: 400,
+                            statusMessage: "Missing invoice id"
+                        });
+                    }
                     const userEmail = invoice.customer_email;
                     if (!userEmail) {
                         throw createError({
@@ -105,34 +111,49 @@ export default defineEventHandler(async (event) => {
                         });
                     };
 
-                    // 3. Update the user's credits with the information of the tier
-                    await db.update(userTable).set({
-                        credit: tier.features.maxCredits
-                    }).where(eq(userTable.id, user.id));
+                    // 3. Ensure idempotent billing cycle handling by inserting payment first.
+                    const stripePaymentIntent = invoice.payments?.data?.[0]?.payment?.payment_intent;
+                    const stripePaymentIntentId = typeof stripePaymentIntent === "string"
+                        ? stripePaymentIntent
+                        : stripePaymentIntent?.id;
+                    const cycleProcessed = await db.transaction(async (tx) => {
+                        const insertedPayment = await tx.insert(paymentTable).values({
+                            userId: user.id,
+                            stripePaymentIntentId,
+                            stripeInvoiceId: invoice.id as string,
+                            amount: invoice.amount_paid as number,
+                            currency: invoice.currency as string,
+                            status: "SUCCESS",
+                            metadata: {
+                                tierId: tier.id,
+                                priceId: tier.stripePriceId,
+                                productName: tier.name
+                            },
+                            receivedAt: new Date()
+                        }).onConflictDoNothing({
+                            target: paymentTable.stripeInvoiceId
+                        }).returning({ id: paymentTable.id });
 
-                    // 4. Create a new payment for the user
-                    await db.insert(paymentTable).values({
-                        userId: user.id,
-                        stripePaymentIntentId: invoice.payments?.data[0].payment.payment_intent as string,
-                        stripeInvoiceId: invoice.id as string,
-                        amount: invoice.amount_paid as number,
-                        currency: invoice.currency as string,
-                        status: "SUCCESS",
-                        metadata: {
-                            tierId: tier.id,
-                            priceId: tier.stripePriceId,
-                            productName: tier.name
-                        },
-                        receivedAt: new Date()
+                        if (insertedPayment.length === 0) {
+                            return false;
+                        }
+
+                        await tx.update(userTable).set({
+                            credit: tier.features.maxCredits
+                        }).where(eq(userTable.id, user.id));
+
+                        await tx.update(subscriptionTable).set({
+                            startsAt: new Date(invoice.period_start * 1000),
+                            endsAt: new Date(invoice.period_end * 1000)
+                        }).where(eq(subscriptionTable.id, subscription.id));
+                        return true;
                     });
+                    if (!cycleProcessed) {
+                        console.log(" |- Duplicate subscription cycle invoice ignored", invoice.id);
+                        break;
+                    }
 
-                    // 5. Update the subscription to the new period
-                    await db.update(subscriptionTable).set({
-                        startsAt: new Date(invoice.period_start * 1000),
-                        endsAt: new Date(invoice.period_end * 1000)
-                    }).where(eq(subscriptionTable.id, subscription.id));
-
-                    // 6. Send an email to the user
+                    // 4. Send an email to the user
                     try {
                         await sendEmailForBillingCycle({
                             email: userEmail,

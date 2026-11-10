@@ -145,9 +145,14 @@ const { $generationApi } = useNuxtApp();
 const userStore = useUserStore();
 const imageStore = useImageStore();
 const { track } = usePosthog();
-const { convertFileToBase64 } = useFile();
+const { convertFileToBase64, compressImageFile } = useFile();
 
-const { data: avatars } = await useFetch<Avatar[]>('/api/v1/avatar');
+const avatarStore = useAvatarStore();
+const avatars = computed(() => avatarStore.avatars);
+
+onMounted(() => {
+    avatarStore.fetchAvatars();
+});
 
 const isGenerating = ref(false);
 const generationCost = ref(2);
@@ -172,7 +177,7 @@ async function onFile(e: Event) {
     const file = input.files && input.files[0] ? input.files[0] : null;
     referenceFile.value = file;
     if (file) {
-        const base64 = await convertFileToBase64(file);
+        const base64 = await compressImageFile(file, 1536, 0.75).catch(() => convertFileToBase64(file));
         form.value.referenceImageBase64 = base64;
         referencePreview.value = URL.createObjectURL(file);
     } else {

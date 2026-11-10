@@ -13,6 +13,7 @@ export default {
         savingChanges: 'Saving changes...',
         saved: 'Saved',
         seeAll: 'See all',
+        viewAll: 'View all',
         done: 'Done',
         confirm: 'Confirm',
         cancel: 'Cancel',
@@ -297,6 +298,7 @@ export default {
     },
     settings: {
         title: 'Settings',
+        recentActivity: 'Recent activity',
         description: 'Manage your profile, plan, and billing',
         profile: 'Profile',
         name: 'Name',
@@ -385,6 +387,7 @@ export default {
     },
     activity: {
         title: 'Recent Activity',
+        description: 'Your latest generations and actions.',
         errors: {
             unableToLoadActivity: 'Unable to load activity. Please try again.',
         },
@@ -457,6 +460,7 @@ export default {
         deleteAsset: 'Delete asset',
         deleteAssetConfirm: 'This action cannot be undone.',
         deleteSelected: 'Delete selected assets',
+        deleteSelectedConfirm: 'Are you sure you want to delete the selected assets? This action cannot be undone.',
         backgroundRemoved: 'Background removed',
         savedAsNewImage: 'Saved as a new image.',
         failedToRemoveBackground: 'Failed to remove background',

@@ -113,4 +113,92 @@ describe('generateOpenRouterImage', () => {
             message: 'Image generation failed',
         });
     });
+
+    it('sanitizes OpenRouter 402 insufficient-credits errors without logging raw body or secrets', async () => {
+        const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+        vi.stubGlobal('useRuntimeConfig', () => ({
+            openRouterApiKey: 'test-openrouter-secret-key',
+            openRouterBaseURL: 'https://openrouter.ai/api/v1',
+            public: { appUrl: 'https://app.kithumbs.com' },
+        }));
+
+        fetchMock.mockResolvedValue({
+            ok: false,
+            status: 402,
+            text: async () => JSON.stringify({
+                error: {
+                    message: 'Insufficient credits. Sensitive detail test-openrouter-secret-key',
+                    code: 402,
+                    metadata: {
+                        limit_source: 'openrouter_credits',
+                        remedy_hint: 'Add credits',
+                    },
+                },
+            }),
+        });
+
+        const { generateOpenRouterImage, OPENROUTER_SKETCH_IMAGE_MODEL } = await import('~~/server/inference/openrouter');
+
+        await expect(generateOpenRouterImage({
+            model: OPENROUTER_SKETCH_IMAGE_MODEL,
+            prompt: 'PRIVATE_USER_PROMPT_DO_NOT_LEAK',
+        })).rejects.toMatchObject({
+            statusCode: 500,
+            message: 'Image generation failed',
+            providerStatus: 402,
+        });
+
+        const loggedText = JSON.stringify(errorSpy.mock.calls);
+        expect(loggedText).not.toContain('test-openrouter-secret-key');
+        expect(loggedText).not.toContain('PRIVATE_USER_PROMPT_DO_NOT_LEAK');
+        expect(loggedText).not.toContain('Sensitive detail');
+        expect(errorSpy).toHaveBeenCalledWith(
+            '-x- OpenRouter image generation failed',
+            expect.objectContaining({
+                status: 402,
+                code: 402,
+                limitSource: 'openrouter_credits',
+            }),
+        );
+        errorSpy.mockRestore();
+    });
+
+    it('falls back to OpenAI for chat completions when OpenRouter returns 402 and OpenAI is configured', async () => {
+        const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        vi.stubGlobal('useRuntimeConfig', () => ({
+            openRouterApiKey: 'test-openrouter-key',
+            openRouterBaseURL: 'https://openrouter.ai/api/v1',
+            openaiApiKey: 'test-openai-key',
+            public: { appUrl: 'https://app.kithumbs.com' },
+        }));
+
+        const openRouterMod = await import('~~/server/inference/openrouter');
+        const openAiMod = await import('~~/server/inference/openai');
+
+        const openRouterClient = openRouterMod.getInferenceClient();
+        const openAiClient = openAiMod.getOpenAIClient();
+
+        const openRouterCreateSpy = vi.spyOn(openRouterClient.chat.completions, 'create').mockRejectedValue(
+            Object.assign(new Error('402 Insufficient credits'), { status: 402 }),
+        );
+        const openAiCreateSpy = vi.spyOn(openAiClient.chat.completions, 'create').mockResolvedValue({
+            choices: [{ message: { content: 'fallback completion' } }],
+        } as any);
+
+        const response = await openRouterMod.inferenceClient.chat.completions.create({
+            model: 'google/gemini-2.5-flash-lite',
+            messages: [{ role: 'user', content: 'describe image' }],
+        });
+
+        expect(openRouterCreateSpy).toHaveBeenCalledTimes(1);
+        expect(openAiCreateSpy).toHaveBeenCalledWith(
+            expect.objectContaining({
+                model: 'gpt-4o-mini',
+                messages: [{ role: 'user', content: 'describe image' }],
+            }),
+            undefined,
+        );
+        expect(response.choices[0]?.message?.content).toBe('fallback completion');
+        warnSpy.mockRestore();
+    });
 });

@@ -349,19 +349,23 @@
 }
 
 .clicklab-sidebar-link-active {
-  background: rgba(57, 255, 136, 0.12);
+  background: linear-gradient(90deg, rgba(57, 255, 136, 0.14) 0%, rgba(57, 255, 136, 0.06) 100%);
   color: var(--cl-neon);
-  border: 1px solid rgba(57, 255, 136, 0.22);
+  border: 1px solid rgba(57, 255, 136, 0.28);
+  box-shadow: 0 0 20px rgba(57, 255, 136, 0.14), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  font-weight: 600;
 }
 
 .clicklab-sidebar-link {
-  color: rgba(232, 237, 242, 0.72);
+  color: rgba(232, 237, 242, 0.75);
   border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .clicklab-sidebar-link:hover {
-  background: rgba(255, 255, 255, 0.04);
-  color: var(--cl-text);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
 .clicklab-grid-bg {

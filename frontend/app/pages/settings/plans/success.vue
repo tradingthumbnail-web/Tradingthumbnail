@@ -21,7 +21,7 @@ const route = useRoute();
 const router = useRouter();
 const tierId = route.query.tierId;
 
-const { data: tiers } = await useFetch(`/api/v1/tier`);
+const { data: tiers } = useLazyFetch(`/api/v1/tier`);
 const selected = computed(() => {
     if (!tiers?.value) return null;
     return tiers.value.find((entry: any) => String(entry.tier?.id) === String(tierId));

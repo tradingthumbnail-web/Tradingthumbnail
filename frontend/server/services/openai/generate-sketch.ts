@@ -1,5 +1,7 @@
 import Sharp from "sharp";
 
+import fal, { isFalConfigured } from "~~/server/inference/fal";
+import { getOpenAIClient, isOpenAIConfigured } from "~~/server/inference/openai";
 import { generateOpenRouterImage, OPENROUTER_SKETCH_IMAGE_MODEL } from "~~/server/inference/openrouter";
 
 export const SKETCH_PROMPT = `
@@ -56,7 +58,110 @@ async function toJpegDataUrl(image: string | Buffer, maxDimension: number): Prom
     return `data:image/jpeg;base64,${jpeg.toString("base64")}`;
 }
 
+function dataUrlToUploadFile(dataUrl: string, filename: string): File {
+    const rawBase64 = dataUrl.replace(/^data:image\/\w+;base64,/, "");
+    const bytes = Buffer.from(rawBase64, "base64");
+    return new File([bytes], filename, { type: "image/jpeg" });
+}
+
+async function generateSketchWithOpenAIFallback(prompt: string, inputReferences: string[]): Promise<Buffer> {
+    const client = getOpenAIClient();
+    const files = inputReferences.map((ref, idx) =>
+        dataUrlToUploadFile(ref, idx === 0 ? "canvas.jpg" : `reference-${idx}.jpg`),
+    );
+
+    let response: any;
+    try {
+        response = await client.images.edit({
+            model: "gpt-image-1.5",
+            image: files as any,
+            prompt,
+            n: 1,
+            size: "1536x1024",
+            quality: "medium",
+            input_fidelity: "high",
+        } as any);
+    } catch (firstError: any) {
+        const status = firstError?.status ?? firstError?.statusCode;
+        if (status === 400 || status === 404) {
+            response = await client.images.edit({
+                model: "gpt-image-1",
+                image: files as any,
+                prompt,
+                n: 1,
+                size: "1536x1024",
+                quality: "medium",
+            } as any);
+        } else {
+            throw firstError;
+        }
+    }
+
+    const b64 = response?.data?.[0]?.b64_json;
+    if (!b64) {
+        throw createError({
+            statusCode: 500,
+            statusMessage: "Image generation failed",
+        });
+    }
+    return Buffer.from(b64, "base64");
+}
+
+async function generateSketchWithFalFallback(prompt: string, inputReferences: string[]): Promise<Buffer> {
+    let response: any;
+    try {
+        response = await fal.subscribe("openai/gpt-image-2/edit", {
+            input: {
+                prompt,
+                image_urls: inputReferences,
+                num_images: 1,
+                image_size: "auto",
+                quality: "medium",
+                output_format: "png",
+            } as any,
+        });
+    } catch {
+        response = await fal.subscribe("fal-ai/gpt-image-1.5/edit", {
+            input: {
+                prompt,
+                image_urls: inputReferences,
+                num_images: 1,
+                image_size: "1536x1024",
+                quality: "medium",
+                input_fidelity: "high",
+                output_format: "png",
+            } as any,
+        });
+    }
+
+    const imageUrl = response?.data?.images?.[0]?.url;
+    if (!imageUrl) {
+        throw createError({
+            statusCode: 500,
+            statusMessage: "Image generation failed",
+        });
+    }
+
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+        throw createError({
+            statusCode: 500,
+            statusMessage: "Failed to download generated image",
+        });
+    }
+
+    const arrayBuffer = await imageResponse.arrayBuffer();
+    return Buffer.from(arrayBuffer);
+}
+
 export const generateSketch = async (params: GenerateSketchParams) => {
+    if (!params?.canvasDataURL || typeof params.canvasDataURL !== "string" || !params.canvasDataURL.trim()) {
+        throw createError({
+            statusCode: 400,
+            statusMessage: "Canvas is required",
+        });
+    }
+
     try {
         console.log(" |– Generating sketch with OpenRouter...")
 
@@ -90,20 +195,55 @@ export const generateSketch = async (params: GenerateSketchParams) => {
             inputReferences.push(await toJpegDataUrl(params.referenceImageBase64, MAX_REFERENCE_DIMENSION));
         }
 
-        const resultBuffer = await generateOpenRouterImage({
-            model: OPENROUTER_SKETCH_IMAGE_MODEL,
-            prompt,
-            inputReferences,
-            aspectRatio: "3:2",
-            quality: "medium",
-            outputFormat: "png",
+        try {
+            const resultBuffer = await generateOpenRouterImage({
+                model: OPENROUTER_SKETCH_IMAGE_MODEL,
+                prompt,
+                inputReferences,
+                aspectRatio: "3:2",
+                quality: "medium",
+                outputFormat: "png",
+            });
+
+            console.log(' |- Sketch generated nicely with OpenRouter');
+            return resultBuffer;
+        } catch (openRouterError: any) {
+            const providerStatus = openRouterError?.providerStatus ?? openRouterError?.statusCode ?? "unknown";
+            console.warn(" |- OpenRouter sketch generation failed; checking fallback providers", { status: providerStatus });
+
+            if (isOpenAIConfigured()) {
+                try {
+                    console.log(" |– Generating sketch with OpenAI fallback...");
+                    const openAiBuffer = await generateSketchWithOpenAIFallback(prompt, inputReferences);
+                    console.log(" |- Sketch generated nicely with OpenAI fallback");
+                    return openAiBuffer;
+                } catch (openAiError: any) {
+                    console.warn(" |- OpenAI sketch fallback failed", {
+                        status: openAiError?.status ?? openAiError?.statusCode ?? "unknown",
+                    });
+                }
+            }
+
+            if (isFalConfigured()) {
+                try {
+                    console.log(" |– Generating sketch with FAL fallback...");
+                    const falBuffer = await generateSketchWithFalFallback(prompt, inputReferences);
+                    console.log(" |- Sketch generated nicely with FAL fallback");
+                    return falBuffer;
+                } catch (falError: any) {
+                    console.warn(" |- FAL sketch fallback failed", {
+                        status: falError?.status ?? falError?.statusCode ?? "unknown",
+                    });
+                }
+            }
+
+            throw openRouterError;
+        }
+    } catch (error: any) {
+        console.error("-x- Error generating sketch", {
+            statusCode: error?.statusCode ?? error?.status ?? 500,
+            message: error instanceof Error ? error.message : "Unknown error",
         });
-
-        console.log(' |- Sketch generated nicely with OpenRouter');
-        return resultBuffer;
-
-    } catch (error) {
-        console.error("-x- Error generating sketch with OpenRouter", error);
         throw error;
     }
 };

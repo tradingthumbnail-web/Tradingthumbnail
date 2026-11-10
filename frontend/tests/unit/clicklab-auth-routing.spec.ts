@@ -33,7 +33,7 @@ describe('clicklab auth routing', () => {
     expect(sanitizeInternalRedirect(undefined, '/home')).toBe('/home');
   });
 
-  it('login with redirect=/studio sends authenticated users to /home (demo route is guest-facing)', () => {
+  it('login with redirect=/studio sends authenticated users to /studio', () => {
     expect(sanitizeInternalRedirect('/studio', '/home')).toBe('/studio');
     expect(
       resolveAuthRouteGuard({
@@ -43,10 +43,10 @@ describe('clicklab auth routing', () => {
         authed: true,
         demoUi: false,
       }),
-    ).toEqual({ action: 'redirect', to: '/home' });
+    ).toEqual({ action: 'redirect', to: '/studio' });
   });
 
-  it('authenticated user on /studio is redirected to /home', () => {
+  it('authenticated user on /studio is allowed', () => {
     expect(
       resolveAuthRouteGuard({
         path: '/studio',
@@ -55,7 +55,7 @@ describe('clicklab auth routing', () => {
         authed: true,
         demoUi: false,
       }),
-    ).toEqual({ action: 'redirect', to: '/home' });
+    ).toEqual({ action: 'allow' });
   });
 
   it('authenticated user on / → /home', () => {

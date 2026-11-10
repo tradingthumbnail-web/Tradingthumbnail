@@ -199,8 +199,15 @@ const toast = useToast();
 const { $generationApi } = useNuxtApp();
 const { convertFileToBase64 } = useFile();
 
-const { data: assets } = await useFetch<Asset[]>('/api/v1/asset');
-const { data: avatars } = await useFetch<Avatar[]>('/api/v1/avatar');
+const assetStore = useAssetStore();
+const avatarStore = useAvatarStore();
+const assets = computed(() => assetStore.assets);
+const avatars = computed(() => avatarStore.avatars);
+
+onMounted(() => {
+    assetStore.fetchAssets();
+    avatarStore.fetchAvatars();
+});
 
 const isGenerating = ref(false);
 const formValues = ref<Record<string, { text?: string; assetId?: string; avatarId?: string; characterImageBase64?: string }>>({});

@@ -22,7 +22,14 @@ export default defineEventHandler(async (event) => {
     }
 
     const { avatarId, keepBackground, matchLighting, referenceImageBase64, creativityLevel } = await readBody(event);
-    if (!avatarId || !keepBackground || !matchLighting || !referenceImageBase64 || !creativityLevel) {
+    if (
+        !avatarId ||
+        typeof keepBackground !== 'boolean' ||
+        typeof matchLighting !== 'boolean' ||
+        !referenceImageBase64 ||
+        typeof referenceImageBase64 !== 'string' ||
+        !creativityLevel
+    ) {
         throw createError({ statusCode: 400, statusMessage: 'Bad Request' });
     };
 
@@ -45,21 +52,47 @@ export default defineEventHandler(async (event) => {
         const weightsPresignedUrl = await storage.generatePresignedUrl(weightsStorageKey);
 
         // 2.1. Download the reference image and upload it to the storage
-        const referenceImageBuffer = Buffer.from(referenceImageBase64, 'base64');
+        const normalizedReferenceBase64 = referenceImageBase64.replace(/^data:.*?;base64,/, '');
+        const referenceImageBuffer = Buffer.from(normalizedReferenceBase64, 'base64');
         const referenceImageStorageKey = `${user.id}/reference-image.png`;
         await storage.put(referenceImageStorageKey, referenceImageBuffer, 'image/png');
         const referenceImagePresignedUrl = await storage.generatePresignedUrl(referenceImageStorageKey);
 
         // 3. Get the image description for the image (use presigned URL, not base64)
-        const imageDescription = await generateImageDescriptionForImageToImage(referenceImagePresignedUrl);
-        if (!imageDescription) {
-            throw createError({ statusCode: 500, statusMessage: 'Failed to generate image description' });
+        let imageDescription: string | null = null;
+        try {
+            imageDescription = await generateImageDescriptionForImageToImage(referenceImagePresignedUrl);
+        } catch (descError: any) {
+            console.warn(" |- Image description generation failed; using fallback description", {
+                status: descError?.status ?? descError?.statusCode ?? "unknown",
+            });
         }
 
         // 4. Get the thumb prompt from the image to image process
-        const thumbPrompt = await generateThumbPromptFromImageToImage(referenceImagePresignedUrl, imageDescription);
+        let thumbPrompt: string | null = null;
+        if (imageDescription) {
+            try {
+                thumbPrompt = await generateThumbPromptFromImageToImage(referenceImagePresignedUrl, imageDescription);
+            } catch (promptError: any) {
+                console.warn(" |- Thumb prompt generation failed; using fallback prompt", {
+                    status: promptError?.status ?? promptError?.statusCode ?? "unknown",
+                });
+            }
+        }
+
         if (!thumbPrompt) {
-            throw createError({ statusCode: 500, statusMessage: 'Failed to generate thumb prompt' });
+            const backgroundDirective = keepBackground
+                ? "Preserve the original background composition, environment, and spatial layout."
+                : "Compose a clean, high-contrast YouTube thumbnail background suited to the subject.";
+            const lightingDirective = matchLighting
+                ? "Match the original scene lighting direction, color temperature, and shadows."
+                : "Use dramatic, studio-quality cinematic YouTube thumbnail lighting.";
+            thumbPrompt = [
+                imageDescription || "A high-contrast, expressive YouTube thumbnail featuring the main character in the reference composition.",
+                backgroundDirective,
+                lightingDirective,
+                `Creativity level: ${creativityLevel}.`,
+            ].join(" ");
         }
 
         // 5. Generate the image with the model
@@ -121,11 +154,13 @@ export default defineEventHandler(async (event) => {
             newImageUrl: newImagePresignedUrl,
         };
         });
-    } catch (error) {
+    } catch (error: any) {
         if (error && typeof error === 'object' && 'statusCode' in error) {
             throw error;
         }
-        console.error(error);
+        console.error('-x- Image-to-image generation request failed', {
+            message: error instanceof Error ? error.message : 'Unknown error',
+        });
         throw createError({ statusCode: 500, statusMessage: 'Internal server error' });
     }
 });

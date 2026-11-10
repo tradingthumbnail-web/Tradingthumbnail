@@ -134,7 +134,12 @@ const emit = defineEmits<{
     (e: 'add', element: Omit<PipelineElement, 'fabricObjectId' | 'position'>): void;
 }>();
 
-const { data: avatars } = await useFetch<Avatar[]>('/api/v1/avatar');
+const avatarStore = useAvatarStore();
+const avatars = computed(() => avatarStore.avatars);
+
+onMounted(() => {
+    avatarStore.fetchAvatars();
+});
 
 const trainedAvatars = computed(() => 
     avatars.value?.filter(a => a.status === 'TRAINED') ?? []

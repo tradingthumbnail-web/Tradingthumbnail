@@ -1,14 +1,19 @@
 import OpenAI from "openai";
+import { getOpenAIClient, isOpenAIConfigured } from "~~/server/inference/openai";
 
 export const OPENROUTER_SKETCH_IMAGE_MODEL = "openai/gpt-image-2";
 
 const DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 
 function readOpenRouterConfig() {
-    const config = useRuntimeConfig();
-    const openRouterApiKey = config.openRouterApiKey?.trim() || "";
-    const openRouterBaseURL = (config.openRouterBaseURL || DEFAULT_BASE_URL).replace(/\/$/, "");
+    const config = typeof useRuntimeConfig === "function" ? useRuntimeConfig() : undefined;
+    const openRouterApiKey = (config?.openRouterApiKey || process.env.NUXT_OPEN_ROUTER_API_KEY || "").trim();
+    const openRouterBaseURL = (config?.openRouterBaseURL || process.env.NUXT_OPEN_ROUTER_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
     return { openRouterApiKey, openRouterBaseURL };
+}
+
+export function isOpenRouterConfigured(): boolean {
+    return Boolean(readOpenRouterConfig().openRouterApiKey);
 }
 
 /** Ensures OpenRouter is configured; throws a controlled error when a feature needs it. */
@@ -38,9 +43,70 @@ export function getInferenceClient(): OpenAI {
     return cachedInferenceClient;
 }
 
-/** Lazy OpenAI client — does not throw until first use. */
+export function mapModelForOpenAIFallback(model: string): string {
+    if (!model) return "gpt-4o-mini";
+    if (model.startsWith("openai/")) {
+        return model.slice("openai/".length);
+    }
+    if (model.includes("/")) {
+        return "gpt-4o-mini";
+    }
+    return model;
+}
+
+function summarizeProviderErrorText(errorText: string): { code?: number | string; limitSource?: string } {
+    if (!errorText) return {};
+    try {
+        const parsed = JSON.parse(errorText) as {
+            error?: {
+                code?: number | string;
+                metadata?: { limit_source?: string };
+            };
+        };
+        return {
+            code: parsed?.error?.code,
+            limitSource: parsed?.error?.metadata?.limit_source,
+        };
+    } catch {
+        return {};
+    }
+}
+
+/** Lazy OpenAI-compatible client — tries OpenRouter first and falls back to OpenAI for chat completions when configured. */
 export const inferenceClient = new Proxy({} as OpenAI, {
     get(_target, prop, receiver) {
+        if (prop === "chat") {
+            return {
+                completions: {
+                    create: async (params: OpenAI.Chat.Completions.ChatCompletionCreateParams, options?: OpenAI.RequestOptions) => {
+                        if (isOpenRouterConfigured()) {
+                            try {
+                                const client = getInferenceClient();
+                                return await client.chat.completions.create(params as any, options);
+                            } catch (openRouterError: any) {
+                                const status = openRouterError?.status ?? openRouterError?.statusCode ?? "unknown";
+                                if (!isOpenAIConfigured()) {
+                                    throw openRouterError;
+                                }
+                                console.warn(" |- OpenRouter chat completion failed; falling back to OpenAI", { status });
+                            }
+                        } else if (!isOpenAIConfigured()) {
+                            assertOpenRouterConfigured();
+                        }
+
+                        const fallbackClient = getOpenAIClient();
+                        return await fallbackClient.chat.completions.create(
+                            {
+                                ...params,
+                                model: mapModelForOpenAIFallback(params.model),
+                            } as any,
+                            options,
+                        );
+                    },
+                },
+            };
+        }
+
         const client = getInferenceClient();
         const value = Reflect.get(client, prop, receiver);
         return typeof value === "function" ? value.bind(client) : value;
@@ -91,11 +157,18 @@ export async function generateOpenRouterImage(input: {
 
     if (!response.ok) {
         const errorText = await response.text().catch(() => "");
-        console.error("-x- OpenRouter image generation failed", response.status, errorText.slice(0, 500));
-        throw createError({
+        const summary = summarizeProviderErrorText(errorText);
+        console.error("-x- OpenRouter image generation failed", {
+            status: response.status,
+            ...(summary.code !== undefined ? { code: summary.code } : {}),
+            ...(summary.limitSource ? { limitSource: summary.limitSource } : {}),
+        });
+        const err = createError({
             statusCode: 500,
             statusMessage: "Image generation failed",
         });
+        (err as any).providerStatus = response.status;
+        throw err;
     }
 
     const payload = await response.json() as OpenRouterImageResponse;

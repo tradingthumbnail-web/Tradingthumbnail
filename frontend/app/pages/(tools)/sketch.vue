@@ -240,8 +240,9 @@ const imageStore = useImageStore();
 const avatarStore = useAvatarStore();
 const userStore = useUserStore();
 
-const { data: avatars } = await useFetch('/api/v1/avatar');
-const { data: styles } = await useFetch<Style[]>('/api/v1/style');
+const styleStore = useStyleStore();
+const avatars = computed(() => avatarStore.avatars);
+const styles = computed(() => styleStore.styles);
 const isAssetModalOpen = ref(false);
 
 const form = ref({
@@ -595,6 +596,8 @@ const generateSketch = async () => {
 }
 
 onMounted(() => {
+    avatarStore.fetchAvatars();
+    styleStore.fetchStyles();
     window.addEventListener('keydown', handler);
     window.addEventListener('resize', fitCanvas);
     

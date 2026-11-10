@@ -83,7 +83,7 @@
 <script setup lang="ts">
 import type { Style, InsertStyle } from '~~/server/database/schemas/style.schema';
 
-const { data: styles, refresh: refreshStyles } = await useFetch('/api/v1/style');
+const { data: styles, refresh: refreshStyles } = useLazyFetch('/api/v1/style');
 const toast = useToast();
 const { convertFileToBase64 } = useFile();
 

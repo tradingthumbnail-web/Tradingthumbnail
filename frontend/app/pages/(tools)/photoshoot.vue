@@ -164,7 +164,11 @@ const { track } = usePosthog()
 const isGenerating = ref(false);
 const route = useRoute();
 
-const { data: avatars, pending, error, refresh: refreshAvatars } = await useFetch('/api/v1/avatar');
+const avatarStore = useAvatarStore();
+const avatars = computed(() => avatarStore.avatars);
+const pending = computed(() => avatarStore.loading);
+const error = computed(() => avatarStore.error);
+const refreshAvatars = () => avatarStore.fetchAvatars(true);
 
 const expressions = [
     t('photoshoot.expressions.neutral'),
@@ -295,6 +299,7 @@ async function confirmDelete() {
 }
 
 onMounted(async () => {
+    await avatarStore.fetchAvatars();
     if (!imageStore.hasInitialized) {
         await imageStore.getImages();
     };

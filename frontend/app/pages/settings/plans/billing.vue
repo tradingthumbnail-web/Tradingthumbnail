@@ -22,7 +22,7 @@ const router = useRouter();
 const config = useRuntimeConfig();
 const paymentsEnabled = computed(() => String(config.public.enablePayments).toLowerCase() === 'true');
 
-const { data, pending, error } = await useFetch('/api/v1/billing/invoices', {
+const { data, pending, error } = useLazyFetch('/api/v1/billing/invoices', {
     immediate: paymentsEnabled.value,
 });
 

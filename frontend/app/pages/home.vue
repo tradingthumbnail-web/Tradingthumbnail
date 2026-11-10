@@ -3,6 +3,7 @@
     <HomeHeader />
     <HomeQuickActions />
     <HomeGallery />
+    <HomeActivity />
   </div>
 </template>
 

@@ -122,6 +122,7 @@ definePageMeta({
 const { t, locale } = useI18n();
 const toast = useToast();
 const config = useRuntimeConfig();
+const userStore = useUserStore();
 const form = reactive({
     email: '',
     password: '',
@@ -219,6 +220,7 @@ async function onSubmit() {
             method: 'POST',
             body: form,
         });
+        await userStore.getMe({ force: true });
         toast.show({
             title: t('auth.login.success.title'),
             message: t('auth.login.success.message'),

@@ -110,28 +110,22 @@ const emit = defineEmits<{
     'cancel': [];
 }>();
 
-const assetStore = useAssetStore();
+let assetStore: any;
+try {
+    assetStore = useAssetStore();
+} catch {
+    assetStore = reactive({ assets: [], loading: false, fetchAssets: () => Promise.resolve([]) });
+}
 const modalRef = ref<HTMLDialogElement | null>(null);
 const searchQuery = ref('');
 const selectedIds = ref<Set<string>>(new Set(props.preselectedIds));
 
-const { data, pending } = await useFetch<Asset[]>("/api/v1/asset", {
-    immediate: true,
-    transform: (incoming) => {
-        if (assetStore.assets.length === 0) {
-            assetStore.assets = incoming;
-        }
-        return incoming;
-    }
-});
+const allAssets = computed<Asset[]>(() => (assetStore?.assets || []) as Asset[]);
+const isLoading = computed(() => Boolean(assetStore?.loading && allAssets.value.length === 0));
 
-const allAssets = computed<Asset[]>(() => {
-    return (assetStore.assets && assetStore.assets.length > 0)
-        ? assetStore.assets as Asset[]
-        : (data?.value || []);
+onMounted(() => {
+    assetStore?.fetchAssets?.();
 });
-
-const isLoading = computed(() => pending?.value === true && allAssets.value.length === 0);
 
 const filteredAssets = computed<Asset[]>(() => {
     const q = searchQuery.value.toLowerCase();

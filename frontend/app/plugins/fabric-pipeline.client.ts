@@ -8,3 +8,5 @@ declare module 'fabric' {
 
 const existing = (FabricObject as any).customProperties as string[] | undefined;
 (FabricObject as any).customProperties = existing ? [...existing, 'pipelineElementId'] : ['pipelineElementId'];
+
+export default defineNuxtPlugin(() => {});

@@ -8,6 +8,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     include: ['tests/**/*.{test,spec}.ts'],
+    exclude: ['**/node_modules/**', 'tests/e2e/**'],
     setupFiles: ['./tests/setup.ts'],
     // Heavy API/Nuxt imports per file — limit parallelism to reduce heap OOM on full runs.
     pool: 'forks',

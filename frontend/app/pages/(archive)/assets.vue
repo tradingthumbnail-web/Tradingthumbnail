@@ -24,8 +24,15 @@
         <!-- Content -->
         <div class="card flex-1 min-h-0 overflow-y-auto p-4">
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <template v-if="assetStore?.loading && !assetStore?.assets?.length">
+                    <div v-for="i in 8" :key="i" class="card bg-base-100 border border-base-200 p-3 animate-pulse">
+                        <div class="aspect-video rounded-[var(--radius-box)] bg-base-200"></div>
+                        <div class="mt-3 h-4 bg-base-200 rounded w-2/3"></div>
+                    </div>
+                </template>
                 <div
-                    v-for="a in assetStore.assets"
+                    v-else
+                    v-for="a in (assetStore?.assets || [])"
                     :key="a.id"
                     class="card bg-base-100 border border-base-200 p-3 relative group"
                     :class="{ 'ring-2 ring-[var(--color-primary)]': isSelected(a.id) }"
@@ -63,7 +70,7 @@
                     </div>
                 </div>
 
-                <div v-if="!assetStore.assets.length" class="col-span-full h-48 rounded-[var(--radius-box)] border border-base-200 bg-base-200/40 flex items-center justify-center text-sm text-base-content/70">
+                <div v-if="!assetStore?.assets?.length" class="col-span-full h-48 rounded-[var(--radius-box)] border border-base-200 bg-base-200/40 flex items-center justify-center text-sm text-base-content/70">
                     {{ $t('assets.noAssets') }}
                 </div>
             </div>
@@ -124,6 +131,7 @@
 </template>
 
 <script setup lang="ts">
+import { clicklabPageTitle } from '~~/shared/clicklab/page-title';
 import type { Asset } from '~~/server/database/schemas/assets.schema';
 
 const { t } = useI18n();
@@ -141,13 +149,11 @@ const addingAssets = ref<boolean>(false);
 const { isRemoving, removeBackgroundFromImage } = useBackgroundRemoval();
 const { show: showToast } = useToast();
 
-const { data: assets, refresh: refreshAssets } = await useFetch('/api/v1/asset', {
-    transform: (data) => {
-        if (assetStore.assets.length === 0) {
-            assetStore.assets = data;
-        }
-        return data;
-    }
+const assets = computed(() => assetStore.assets);
+const refreshAssets = () => assetStore.fetchAssets(true);
+
+onMounted(() => {
+    assetStore.fetchAssets();
 });
 
 const onAdd = async (files: File[]) => {

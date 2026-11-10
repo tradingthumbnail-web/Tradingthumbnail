@@ -109,7 +109,7 @@ import type { DemoAvatar } from '~~/shared/clicklab/demo-data';
 import { DEMO_AVATARS } from '~~/shared/clicklab/demo-data';
 import { CLICKLAB_PRODUCT_NAME } from '~~/shared/clicklab/brand';
 
-definePageMeta({ layout: 'clicklab-studio' });
+definePageMeta({ layout: 'default' });
 
 useHead({ title: `Avatars | ${CLICKLAB_PRODUCT_NAME}` });
 

@@ -47,9 +47,11 @@ export const generateImageDescriptionForInpainting = async (imageUrl: string, pr
             ],
         });
 
-        return response.choices[0].message.content;
-    } catch (error) {
-        console.error("-x- Error generating image description for inpainting", error);
-        throw error;
+        return response.choices[0]?.message?.content || prompt;
+    } catch (error: any) {
+        console.warn(" |- Image description for inpainting failed; falling back to user prompt", {
+            status: error?.status ?? error?.statusCode ?? "unknown",
+        });
+        return prompt;
     }
 };

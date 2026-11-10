@@ -89,7 +89,12 @@ const emit = defineEmits<{
     (e: 'add', element: Omit<PipelineElement, 'fabricObjectId' | 'position'>, firstAssetId: string): void;
 }>();
 
-const { data: assets } = await useFetch<Asset[]>('/api/v1/asset');
+const assetStore = useAssetStore();
+const assets = computed(() => assetStore.assets);
+
+onMounted(() => {
+    assetStore.fetchAssets();
+});
 
 const label = ref('');
 const selectedAssetIds = ref<string[]>([]);

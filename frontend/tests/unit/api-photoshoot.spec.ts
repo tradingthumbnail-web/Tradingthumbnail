@@ -89,6 +89,7 @@ describe('API: /api/v1/generation/photoshoot.post', () => {
         id: OWNED_AVATAR_ID,
         userId: USER_ID,
         gender: 'FEMALE',
+        status: 'TRAINED',
         deletedAt: null,
     };
 
@@ -177,7 +178,7 @@ describe('API: /api/v1/generation/photoshoot.post', () => {
             message: 'Avatar not found',
             statusCode: 404,
         });
-        expect(mockRunChargedWork).toHaveBeenCalled();
+        expect(mockRunChargedWork).not.toHaveBeenCalled();
         expect(mockFindFirstAvatar).toHaveBeenCalled();
     });
 
@@ -190,7 +191,7 @@ describe('API: /api/v1/generation/photoshoot.post', () => {
             message: 'Avatar not found',
             statusCode: 404,
         });
-        expect(mockRunChargedWork).toHaveBeenCalled();
+        expect(mockRunChargedWork).not.toHaveBeenCalled();
         expect(mockFindFirstAvatar).toHaveBeenCalled();
         expect(generatePhotoshootImages).not.toHaveBeenCalled();
     });

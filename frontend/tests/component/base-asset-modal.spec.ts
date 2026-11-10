@@ -26,8 +26,12 @@ describe('Base/AssetModal.vue', () => {
                 modelValue: true,
             },
             global: {
+                mocks: {
+                    $t: (k: string) => k,
+                },
                 stubs: {
                     Icon: true,
+                    BaseKiThumbsImage: true,
                 }
             }
         });

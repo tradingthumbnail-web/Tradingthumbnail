@@ -69,7 +69,7 @@ const { t } = useI18n();
 
 const productId = computed(() => route.query['productId'] as string || '');
 
-const { data: product } = await useFetch<Product>(`/api/v1/product/${productId.value}`);
+const { data: product } = useLazyFetch<Product>(`/api/v1/product/${productId.value}`);
 
 const goToDashboard = () => {
     router.push('/');

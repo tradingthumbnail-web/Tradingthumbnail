@@ -124,7 +124,7 @@ const route = useRoute();
 const userStore = useUserStore();
 const { t, locale } = useI18n();
 const { posthog } = usePosthog();
-const { checkForUpdates } = useChangelog();
+const { checkForUpdates, markAsViewed } = useChangelog();
 const impersonateStore = useImpersonateStore();
 
 const isQuickGenModalOpen = ref(false);
@@ -192,26 +192,24 @@ onMounted(async () => {
     }
 
     window.addEventListener('keydown', handleShortcut);
-    await userStore.getMe({ locale: locale.value });
-    
-    try {
-        await impersonateStore.getImpersonationStatus();
-    } catch (error) {
-        console.error(error);
-        impersonateStore.isImpersonating = false;
-        impersonateStore.targetUser = null;
-    }
     
     if (userStore.user) {
+        if (checkForUpdates()) {
+            changelogModalRef.value?.showModal();
+            markAsViewed();
+        }
+
         posthog.identify(userStore.user.id, {
             name: userStore.user.name,
             email: userStore.user.email,
             tier: userStore.tier?.name,
         });
-    }
 
-    if (checkForUpdates()) {
-        changelogModalRef.value?.showModal();
+        impersonateStore.getImpersonationStatus().catch((error) => {
+            console.error(error);
+            impersonateStore.isImpersonating = false;
+            impersonateStore.targetUser = null;
+        });
     }
 });
 

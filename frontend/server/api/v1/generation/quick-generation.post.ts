@@ -86,7 +86,6 @@ export default defineEventHandler(async (event) => {
         if (promptImprovement && !useFlux2) {
             const generatedOptimizedPrompt = await optimizePrompt(prompt, imageType);
             if (generatedOptimizedPrompt) optimizedPrompt = generatedOptimizedPrompt;
-            console.log(' |- Optimized prompt: ', optimizedPrompt);
         }
 
         let generatedImagesURLs: string[] = [];
@@ -185,7 +184,6 @@ export default defineEventHandler(async (event) => {
                 });
 
                 const referenceImageURL = await storage.generatePresignedUrl(referenceImageStorageKey);
-                console.log(' |- Optimized prompt: ', optimizedPrompt);
                 model = requestedModel || "fal-ai/flux-pro/kontext";
                 generationParams = FLUX_IMAGE_TO_IMAGE_PARAMS;
                 generatedImagesURLs = await generateQuickImageToImage({

@@ -8,7 +8,7 @@
                 </div>
             </div>
 
-            <div v-if="paymentsEnabled" class="card bg-base-200 border border-base-100/10 rounded-2xl shadow-lg">
+            <div class="card bg-base-200 border border-base-100/10 rounded-2xl shadow-lg">
                 <div class="p-6">
                     <h2 class="text-lg font-bold text-base-content mb-5">{{ $t('settings.profile') }}</h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -42,78 +42,6 @@
                             <Icon name="lucide:save" size="16" />
                             {{ $t('common.saveChanges') }}
                         </button>
-                    </div>
-                    <div class="mt-6 border-t border-base-content/10 pt-4">
-                        <div class="collapse collapse-arrow bg-base-100 rounded-box">
-                            <input type="checkbox" />
-                            <div class="collapse-title font-medium text-base-content">
-                                {{ $t('settings.updatePassword') }}
-                            </div>
-                            <div class="collapse-content">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div class="form-control">
-                                        <label class="label">
-                                            <span class="label-text">{{ $t('settings.currentPassword') }}</span>
-                                        </label>
-                                        <input v-model="passwordForm.currentPassword" type="password" class="input input-bordered w-full" :placeholder="t('settings.currentPassword')" />
-                                    </div>
-                                    <div class="form-control">
-                                        <label class="label">
-                                            <span class="label-text">{{ $t('settings.newPassword') }}</span>
-                                        </label>
-                                        <input v-model="passwordForm.newPassword" type="password" class="input input-bordered w-full" :placeholder="t('settings.newPassword')" />
-                                    </div>
-                                    <div class="form-control">
-                                        <label class="label">
-                                            <span class="label-text">{{ $t('settings.repeatNewPassword') }}</span>
-                                        </label>
-                                        <input v-model="passwordForm.repeatNewPassword" type="password" class="input input-bordered w-full" :placeholder="t('settings.repeatNewPassword')" />
-                                    </div>
-                                </div>
-                                <div class="card-actions justify-end mt-4">
-                                    <button class="btn btn-primary btn-sm" :disabled="isUpdatingPassword" @click="updatePassword">
-                                        <Icon name="svg-spinners:bars-scale-fade" size="16" mode="svg" v-if="isUpdatingPassword" />
-                                        {{ isUpdatingPassword ? $t('common.savingChanges') : $t('settings.updatePassword') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="mt-6 border-t border-base-content/10 pt-4">
-                        <div class="collapse collapse-arrow bg-base-100 rounded-box">
-                            <input type="checkbox" />
-                            <div class="collapse-title font-medium text-base-content">
-                                {{ $t('settings.updatePassword') }}
-                            </div>
-                            <div class="collapse-content">
-                                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                                    <div class="form-control">
-                                        <label class="label">
-                                            <span class="label-text">{{ $t('settings.currentPassword') }}</span>
-                                        </label>
-                                        <input v-model="passwordForm.currentPassword" type="password" class="input input-bordered w-full" :placeholder="t('settings.currentPassword')" />
-                                    </div>
-                                    <div class="form-control">
-                                        <label class="label">
-                                            <span class="label-text">{{ $t('settings.newPassword') }}</span>
-                                        </label>
-                                        <input v-model="passwordForm.newPassword" type="password" class="input input-bordered w-full" :placeholder="t('settings.newPassword')" />
-                                    </div>
-                                    <div class="form-control">
-                                        <label class="label">
-                                            <span class="label-text">{{ $t('settings.repeatNewPassword') }}</span>
-                                        </label>
-                                        <input v-model="passwordForm.repeatNewPassword" type="password" class="input input-bordered w-full" :placeholder="t('settings.repeatNewPassword')" />
-                                    </div>
-                                </div>
-                                <div class="card-actions justify-end mt-4">
-                                    <button class="btn btn-primary btn-sm" :disabled="isUpdatingPassword" @click="updatePassword">
-                                        <Icon name="svg-spinners:bars-scale-fade" size="16" mode="svg" v-if="isUpdatingPassword" />
-                                        {{ isUpdatingPassword ? $t('common.savingChanges') : $t('settings.updatePassword') }}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                     <div class="mt-6 border-t border-base-content/10 pt-4">
                         <div class="collapse collapse-arrow bg-base-100 rounded-box">
@@ -189,7 +117,13 @@
                         </div>
                     </div>
 
-                    <SettingsBillingCard :invoices="invoices" :pending="invoicesPending" :error="invoicesError" :max-items="5" />
+                    <SettingsBillingCard
+                        v-if="paymentsEnabled"
+                        :invoices="invoices"
+                        :pending="invoicesPending"
+                        :error="invoicesError"
+                        :max-items="5"
+                    />
                 </div>
             </div>
 
@@ -331,11 +265,11 @@ const openChangelog = () => {
     changelogModalRef.value?.showModal();
 };
 
-const { data: invoices, pending: invoicesPending, error: invoicesError } = await useFetch('/api/v1/billing/invoices', {
+const { data: invoices, pending: invoicesPending, error: invoicesError } = useLazyFetch('/api/v1/billing/invoices', {
     immediate: paymentsEnabled.value,
 });
-const { data: products, pending: productsPending, error: productsError } = await useFetch<Product[]>('/api/v1/product');
-const { data: activity, pending: activityPending, error: activityError } = await useFetch('/api/v1/activity', {
+const { data: products, pending: productsPending, error: productsError } = useLazyFetch<Product[]>('/api/v1/product');
+const { data: activity, pending: activityPending, error: activityError } = useLazyFetch('/api/v1/activity', {
     query: {
         limit: 5
     }
@@ -349,8 +283,10 @@ const form = reactive({
     notifications: userStore.user?.notifications ?? true,
 });
 
+let hasPopulated = Boolean(userStore.user?.email);
 watch(() => userStore.user, (u) => {
-    if (!u) return;
+    if (!u || hasPopulated) return;
+    hasPopulated = true;
     form.name = u.name ?? '';
     form.username = u.username ?? '';
     form.email = u.email ?? '';
@@ -397,7 +333,24 @@ const cycleInfo = computed(() => {
 });
 
 const saveProfile = async () => {
-    toast.show({ title: t('common.saved'), message: t('settings.saveSuccess'), status: 'success' });
+    try {
+        await $fetch('/api/v1/user/profile', {
+            method: 'POST',
+            body: {
+                name: form.name,
+                username: form.username,
+                notifications: form.notifications,
+            },
+        });
+        await userStore.getMe({ locale: locale.value, force: true });
+        toast.show({ title: t('common.saved'), message: t('settings.saveSuccess'), status: 'success' });
+    } catch (error: any) {
+        toast.show({
+            title: t('common.errors.title'),
+            message: error?.data?.statusMessage || t('common.errors.unknownError'),
+            status: 'error'
+        });
+    }
 };
 
 const updatePassword = async () => {
@@ -538,7 +491,9 @@ async function confirmUnsubscribe() {
 
 useHead({ title: clicklabPageTitle(t('settings.title')) });
 onMounted(async () => {
-    await userStore.getMe({ locale: locale.value });
+    if (!userStore.user) {
+        await userStore.getMe({ locale: locale.value });
+    }
 });
 </script>
 

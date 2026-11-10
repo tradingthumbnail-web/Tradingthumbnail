@@ -129,6 +129,23 @@ describe('API: /api/v1/generation/sketch.post', () => {
             message: 'Avatar is required',
             statusCode: 400,
         });
+        expect(mockRunChargedWork).not.toHaveBeenCalled();
+    });
+
+    it('returns 400 without charging credits when canvasDataURL is missing or empty', async () => {
+        mockReadBody.mockResolvedValue({
+            canvasDataURL: '',
+            referenceType: 'image',
+            avatarId: null,
+        });
+
+        const handler = (await import('~~/server/api/v1/generation/sketch.post')).default;
+        await expect(handler({ context: { user: mockUser } } as any)).rejects.toMatchObject({
+            message: 'Canvas is required',
+            statusCode: 400,
+        });
+        expect(mockRunChargedWork).not.toHaveBeenCalled();
+        expect(generateSketch).not.toHaveBeenCalled();
     });
 
     it('returns 404 when the requested style does not exist', async () => {

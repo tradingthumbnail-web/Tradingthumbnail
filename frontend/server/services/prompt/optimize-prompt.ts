@@ -34,10 +34,12 @@ export const optimizePrompt = async (prompt: string, imageType: 'assets' | 'back
             messages: [{ role: "user", content: basePrompt.replace("{{prompt}}", prompt) }],
         });
 
-        return response.choices[0].message.content;
-    } catch (error) {
-        console.error("Error optimizing prompt", error);
-        throw error;
+        return response.choices[0]?.message?.content ?? null;
+    } catch (error: any) {
+        console.warn(" |- Prompt optimization failed; using original user prompt", {
+            status: error?.status ?? error?.statusCode ?? "unknown",
+        });
+        return null;
     }
 };
 
@@ -91,10 +93,12 @@ export const optimizePhotoshootPrompt = async (prompt: string, expression: strin
             model: model, messages: [{ role: "user", content: fullPrompt }],
         });
 
-        return response.choices[0].message.content;
-    } catch (error) {
-        console.error("Error optimizing prompt for photoshoot generation", error);
-        throw error;
+        return response.choices[0]?.message?.content || [prompt, expression, cameraAngle, background, gender].filter(Boolean).join(", ");
+    } catch (error: any) {
+        console.warn(" |- Photoshoot prompt optimization failed; using composed prompt", {
+            status: error?.status ?? error?.statusCode ?? "unknown",
+        });
+        return [prompt, expression, cameraAngle, background, gender].filter(Boolean).join(", ");
     }
 };
 
@@ -132,8 +136,10 @@ export const optimizeFineGrainedEditionPrompt = async (prompt: string, imageURL:
         });
 
         return response.choices[0]?.message?.content ?? null;
-    } catch (error) {
-        console.warn(" |- Fine-grained edition prompt optimization failed; using original user prompt", error);
+    } catch (error: any) {
+        console.warn(" |- Fine-grained edition prompt optimization failed; using original user prompt", {
+            status: error?.status ?? error?.statusCode ?? "unknown",
+        });
         return null;
     }
 };

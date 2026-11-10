@@ -32,7 +32,7 @@ export type AuthRouteGuardResult =
   | { action: 'allow' }
   | { action: 'redirect'; to: string };
 
-function isPublicRoute(path: string): boolean {
+export function isPublicRoute(path: string): boolean {
   return (PUBLIC_APP_ROUTES as readonly string[]).includes(path);
 }
 
@@ -42,9 +42,6 @@ function loginWithReturn(fullPath: string): string {
 }
 
 function normalizeAuthedDestination(path: string): string {
-  if ((DEMO_STUDIO_ROUTES as readonly string[]).includes(path)) {
-    return '/home';
-  }
   return path;
 }
 
@@ -64,10 +61,6 @@ export function resolveAuthRouteGuard(input: AuthRouteGuardInput): AuthRouteGuar
   }
 
   if (authed && path === '/') {
-    return { action: 'redirect', to: '/home' };
-  }
-
-  if (authed && (DEMO_STUDIO_ROUTES as readonly string[]).includes(path)) {
     return { action: 'redirect', to: '/home' };
   }
 

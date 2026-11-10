@@ -1,5 +1,5 @@
 <template>
-    <div v-if="props.open" class="fixed bottom-6 right-6 z-40">
+    <div v-if="props.open" class="fixed bottom-6 right-6 z-[60]">
         <div class="card bg-base-100 border border-base-200 shadow-lg w-[22rem] max-h-[70vh] flex flex-col overflow-hidden relative" :aria-busy="props.isUploading" data-tour="assets-modal">
             <div class="card-header p-4 flex items-center justify-between">
                 <h3 class="text-sm font-semibold">{{ $t('assets.upload.title') }}</h3>
